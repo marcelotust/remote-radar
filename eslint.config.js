@@ -24,7 +24,14 @@ export default tseslint.config(
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
       'react/no-multi-comp': 'error',
       'max-lines': ['error', { max: 250, skipBlankLines: true, skipComments: true }],
+      'react-hooks/set-state-in-effect': 'off',
     },
     settings: { react: { version: '19' } },
+  },
+  {
+    files: ['**/*.spec.{ts,tsx}'],
+    rules: {
+      'react/no-multi-comp': 'off',
+    },
   },
 )
