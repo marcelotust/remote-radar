@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { useMemo } from 'react'
 import { MOCK_JOBS } from '../data/mockData'
 import { computeRelevanceScore } from '../utils/scoring'
 import { KEYWORD_CONFIG } from '../utils/keywords'
@@ -9,7 +10,11 @@ export const JOBS_KEY = ['jobs'] as const
 
 export const useJobs = () => {
   const { data: companies = [] } = useCompanies()
-  const wishlistMap = new Map(companies.map((c) => [c.name.toLowerCase(), c]))
+
+  const wishlistMap = useMemo(
+    () => new Map(companies.map((c) => [c.name.toLowerCase(), c])),
+    [companies]
+  )
 
   return useQuery<Job[]>({
     queryKey: JOBS_KEY,
