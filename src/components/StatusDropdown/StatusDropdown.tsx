@@ -14,6 +14,7 @@ const OPTIONS: { value: JobStatus; label: string }[] = [
 
 export const StatusDropdown = ({ value, onChange }: Props) => (
   <select
+    aria-label="Status da vaga"
     value={value}
     onChange={(e) => onChange(e.target.value as JobStatus)}
     className="bg-gray-800 text-gray-300 text-xs rounded px-2 py-1 border border-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-600"

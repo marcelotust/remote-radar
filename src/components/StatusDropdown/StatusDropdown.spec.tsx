@@ -6,14 +6,19 @@ import { StatusDropdown } from './StatusDropdown'
 describe('StatusDropdown', () => {
   it('renders the current status as selected value', () => {
     render(<StatusDropdown value="applied" onChange={() => {}} />)
-    expect(screen.getByRole('combobox')).toHaveValue('applied')
+    expect(screen.getByRole('combobox', { name: /status da vaga/i })).toHaveValue('applied')
   })
 
   it('calls onChange with new value when selection changes', async () => {
     const onChange = vi.fn()
     render(<StatusDropdown value="unseen" onChange={onChange} />)
-    await userEvent.selectOptions(screen.getByRole('combobox'), 'seen')
+    await userEvent.selectOptions(screen.getByRole('combobox', { name: /status da vaga/i }), 'seen')
     expect(onChange).toHaveBeenCalledWith('seen')
+  })
+
+  it('has an accessible label "Status da vaga"', () => {
+    render(<StatusDropdown value="unseen" onChange={() => {}} />)
+    expect(screen.getByRole('combobox', { name: /status da vaga/i })).toBeInTheDocument()
   })
 
   it('renders all four status options', () => {

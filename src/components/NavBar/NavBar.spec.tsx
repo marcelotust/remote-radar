@@ -3,9 +3,9 @@ import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect } from 'vitest'
 import { NavBar } from './NavBar'
 
-const renderNavBar = () =>
+const renderNavBar = (initialEntries = ['/']) =>
   render(
-    <MemoryRouter>
+    <MemoryRouter initialEntries={initialEntries}>
       <NavBar />
     </MemoryRouter>
   )
@@ -24,5 +24,18 @@ describe('NavBar', () => {
   it('has a link to wishlist', () => {
     renderNavBar()
     expect(screen.getByRole('link', { name: /wishlist/i })).toHaveAttribute('href', '/wishlist')
+  })
+
+  it('Dashboard link is active on /', () => {
+    renderNavBar(['/'])
+    expect(screen.getByRole('link', { name: /dashboard/i })).toHaveAttribute('aria-current', 'page')
+  })
+
+  it('Dashboard link is NOT active when on /wishlist', () => {
+    renderNavBar(['/wishlist'])
+    expect(screen.getByRole('link', { name: /dashboard/i })).not.toHaveAttribute(
+      'aria-current',
+      'page'
+    )
   })
 })

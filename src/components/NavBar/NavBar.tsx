@@ -5,6 +5,7 @@ export const NavBar = () => (
     <span className="text-white font-bold text-lg tracking-tight">Remote Radar</span>
     <NavLink
       to="/"
+      end
       className={({ isActive }) =>
         `text-sm font-medium transition-colors ${isActive ? 'text-white' : 'text-gray-400 hover:text-white'}`
       }
