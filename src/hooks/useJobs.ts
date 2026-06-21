@@ -1,0 +1,32 @@
+import { useQuery } from '@tanstack/react-query'
+import { MOCK_JOBS } from '../data/mockData'
+import { computeRelevanceScore } from '../utils/scoring'
+import { KEYWORD_CONFIG } from '../utils/keywords'
+import { useCompanies } from './useCompanies'
+import type { Job } from '../types'
+
+export const JOBS_KEY = ['jobs'] as const
+
+export const useJobs = () => {
+  const { data: companies = [] } = useCompanies()
+  const wishlistMap = new Map(companies.map((c) => [c.name.toLowerCase(), c]))
+
+  return useQuery<Job[]>({
+    queryKey: JOBS_KEY,
+    queryFn: async () => structuredClone(MOCK_JOBS),
+    select: (rawJobs) =>
+      rawJobs
+        .map((job) => {
+          const { score, level } = computeRelevanceScore(job, KEYWORD_CONFIG)
+          const wishlistCompany = wishlistMap.get(job.company.toLowerCase())
+          return {
+            ...job,
+            relevance_score: score,
+            relevance_level: level,
+            is_wishlist_company: !!wishlistCompany,
+            wishlist_remote_brazil: wishlistCompany?.remote_brazil,
+          }
+        })
+        .sort((a, b) => (b.relevance_score ?? 0) - (a.relevance_score ?? 0)),
+  })
+}
