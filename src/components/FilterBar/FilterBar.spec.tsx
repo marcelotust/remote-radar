@@ -32,4 +32,17 @@ describe('FilterBar', () => {
     await userEvent.selectOptions(screen.getByLabelText(/status/i), 'applied')
     expect(screen.getByLabelText(/status/i)).toHaveValue('applied')
   })
+
+  it('updates context when relevance filter changes', async () => {
+    renderFilterBar()
+    await userEvent.selectOptions(screen.getByLabelText(/relevância/i), 'high')
+    expect(screen.getByLabelText(/relevância/i)).toHaveValue('high')
+  })
+
+  it('updates context when wishlist toggle changes', async () => {
+    renderFilterBar()
+    const checkbox = screen.getByLabelText(/wishlist/i)
+    await userEvent.click(checkbox)
+    expect(checkbox).toBeChecked()
+  })
 })
