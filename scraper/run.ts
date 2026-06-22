@@ -2,7 +2,7 @@ import 'dotenv/config'
 import { launchBrowser, renderPage } from './render.ts'
 import { resolveAdapter } from './adapters/index.ts'
 import { scoreJob } from './score.ts'
-import { createScraperClient, fetchActiveSources, upsertJobs } from './db.ts'
+import { createScraperClient, fetchActiveSources, upsertJobs, recordSourceRun } from './db.ts'
 import { runScrape } from './pipeline.ts'
 
 const main = async (): Promise<void> => {
@@ -15,6 +15,7 @@ const main = async (): Promise<void> => {
       renderPage: (url, readySelector) => renderPage(browser, url, readySelector),
       scoreJob,
       upsertJobs: (jobs) => upsertJobs(client, jobs),
+      recordSourceRun: (result) => recordSourceRun(client, result),
     })
     console.log('[scrape] done', summary)
   } finally {
