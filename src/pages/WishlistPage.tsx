@@ -3,6 +3,7 @@ import { CompanyCard } from '../components/CompanyCard/CompanyCard'
 import { SourceCard } from '../components/SourceCard/SourceCard'
 import { AddCompanyModal } from '../components/AddCompanyModal/AddCompanyModal'
 import { AddSourceModal } from '../components/AddSourceModal/AddSourceModal'
+import { RunScraperButton } from '../components/RunScraperButton/RunScraperButton'
 import { useCompanies } from '../hooks/useCompanies'
 import { useSources } from '../hooks/useSources'
 import { useUIContext } from '../contexts/UIContext'
@@ -35,13 +36,16 @@ export const WishlistPage = () => {
         <section className="flex flex-col gap-4">
           <div className="flex items-center justify-between">
             <h2 className="text-white font-semibold text-base">Fontes de scraping</h2>
-            <button
-              onClick={() => setSourceModalOpen(true)}
-              aria-label="Adicionar fonte"
-              className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-500 transition-colors"
-            >
-              + Adicionar fonte
-            </button>
+            <div className="flex items-center gap-2">
+              <RunScraperButton />
+              <button
+                onClick={() => setSourceModalOpen(true)}
+                aria-label="Adicionar fonte"
+                className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-500 transition-colors"
+              >
+                + Adicionar fonte
+              </button>
+            </div>
           </div>
           {sources.map((source) => (
             <SourceCard key={source.id} source={source} />
