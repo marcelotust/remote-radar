@@ -12,7 +12,9 @@
     "test:run": "vitest run",
     "coverage": "vitest run --coverage",
     "format": "prettier --write .",
-    "prepare": "husky"
+    "prepare": "husky",
+    "scrape": "tsx scraper/run.ts",
+    "typecheck:scraper": "tsc --noEmit -p tsconfig.scraper.json"
   },
   "lint-staged": {
     "*.{ts,tsx}": [
@@ -38,11 +40,13 @@
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
+    "@types/jsdom": "^28.0.3",
     "@types/node": "^24.12.3",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",
     "@vitest/coverage-v8": "^4.1.9",
+    "dotenv": "^17.4.2",
     "eslint": "^10.5.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-react": "^7.37.5",
@@ -52,7 +56,9 @@
     "husky": "^9.1.7",
     "jsdom": "^29.1.1",
     "lint-staged": "^16.4.0",
+    "playwright": "^1.61.0",
     "prettier": "^3.8.4",
+    "tsx": "^4.22.4",
     "typescript": "~6.0.2",
     "typescript-eslint": "^8.61.1",
     "vite": "^8.0.12",
