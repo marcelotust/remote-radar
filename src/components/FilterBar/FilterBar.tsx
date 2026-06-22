@@ -6,10 +6,10 @@ export const FilterBar = () => {
 
   return (
     <div className="flex flex-wrap items-center gap-4 px-6 py-3 bg-gray-900 border-b border-gray-800">
-      <label className="flex items-center gap-2 text-sm text-gray-400">
-        Status
+      <div className="flex items-center gap-2 text-sm text-gray-400">
+        <label htmlFor="status-filter">Status</label>
         <select
-          aria-label="Status"
+          id="status-filter"
           value={filters.status}
           onChange={(e) => setFilters({ status: e.target.value as StatusFilter })}
           className="bg-gray-800 text-gray-300 text-xs rounded px-2 py-1 border border-gray-700"
@@ -19,12 +19,12 @@ export const FilterBar = () => {
           <option value="applied">Candidatado</option>
           <option value="dismissed">Descartado</option>
         </select>
-      </label>
+      </div>
 
-      <label className="flex items-center gap-2 text-sm text-gray-400">
-        Relevância
+      <div className="flex items-center gap-2 text-sm text-gray-400">
+        <label htmlFor="relevance-filter">Relevância</label>
         <select
-          aria-label="Relevância"
+          id="relevance-filter"
           value={filters.relevance}
           onChange={(e) => setFilters({ relevance: e.target.value as RelevanceFilter })}
           className="bg-gray-800 text-gray-300 text-xs rounded px-2 py-1 border border-gray-700"
@@ -35,29 +35,29 @@ export const FilterBar = () => {
           <option value="low">Baixa</option>
           <option value="negative">Negativa</option>
         </select>
-      </label>
+      </div>
 
-      <label className="flex items-center gap-2 text-sm text-gray-400">
+      <div className="flex items-center gap-2 text-sm text-gray-400">
         <input
+          id="wishlist-filter"
           type="checkbox"
-          aria-label="Wishlist only"
           checked={filters.wishlistOnly}
           onChange={(e) => setFilters({ wishlistOnly: e.target.checked })}
           className="rounded border-gray-700"
         />
-        Wishlist
-      </label>
+        <label htmlFor="wishlist-filter">Wishlist</label>
+      </div>
 
-      <label className="flex items-center gap-2 text-sm text-gray-400">
+      <div className="flex items-center gap-2 text-sm text-gray-400">
         <input
+          id="unread-filter"
           type="checkbox"
-          aria-label="Não lidas"
           checked={filters.unreadOnly}
           onChange={(e) => setFilters({ unreadOnly: e.target.checked })}
           className="rounded border-gray-700"
         />
-        Não lidas
-      </label>
+        <label htmlFor="unread-filter">Não lidas</label>
+      </div>
     </div>
   )
 }

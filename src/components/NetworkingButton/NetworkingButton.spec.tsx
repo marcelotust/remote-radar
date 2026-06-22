@@ -19,6 +19,13 @@ describe('NetworkingButton', () => {
     expect(window.open).toHaveBeenCalledWith(expect.stringMatching(/google\.com\/search/), '_blank')
   })
 
+  it('has a title that references Google, not LinkedIn', () => {
+    render(<NetworkingButton companyName="Stripe" />)
+    const button = screen.getByRole('button')
+    expect(button).toHaveAttribute('title', expect.stringContaining('Google'))
+    expect(button.getAttribute('title')).not.toMatch(/linkedin/i)
+  })
+
   it('includes company name in the URL', async () => {
     render(<NetworkingButton companyName="Cloudflare" />)
     await userEvent.click(screen.getByRole('button'))
