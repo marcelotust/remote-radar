@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { supabase } from '../lib/supabase'
 import { JOBS_KEY } from './useJobs'
 import type { Job, JobStatus } from '../types'
 
@@ -10,7 +11,14 @@ interface UpdatePayload {
 export const useUpdateJobStatus = () => {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async (payload: UpdatePayload): Promise<UpdatePayload> => payload,
+    mutationFn: async (payload: UpdatePayload): Promise<UpdatePayload> => {
+      const { error } = await supabase
+        .from('jobs')
+        .update({ status: payload.status })
+        .eq('id', payload.id)
+      if (error) throw error
+      return payload
+    },
     onMutate: async ({ id, status }) => {
       await qc.cancelQueries({ queryKey: JOBS_KEY })
       const previous = qc.getQueryData<Job[]>(JOBS_KEY)
@@ -22,6 +30,9 @@ export const useUpdateJobStatus = () => {
     },
     onError: (_, __, context) => {
       if (context?.previous) qc.setQueryData(JOBS_KEY, context.previous)
+    },
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: JOBS_KEY })
     },
   })
 }

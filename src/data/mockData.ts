@@ -1,3 +1,6 @@
+// Test-only seed data. The app fetches from Supabase at runtime (see
+// src/lib/supabase.ts); these fixtures back the in-memory Supabase fake used in
+// tests (src/lib/__mocks__/supabase.ts).
 import type { Job, Company, ScrapingSource } from '../types'
 
 export const MOCK_COMPANIES: Company[] = [
