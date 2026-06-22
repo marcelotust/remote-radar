@@ -173,8 +173,13 @@ ever exposed to the browser.
 so the button has something to trigger:
 
 - Triggers: `schedule` (daily cron, e.g. `0 9 * * *`) + `workflow_dispatch`.
-- Steps: checkout → setup Node → `npm ci` → `npx playwright install --with-deps
-chromium` → `npm run scrape`.
+- Steps: checkout → setup Node (`cache: npm`) → `npm ci` → cache the Playwright
+  browser binaries via `actions/cache` (key on the Playwright version) →
+  `npx playwright install --with-deps chromium` (a no-op on a cache hit) →
+  `npm run scrape`.
+- **Cost control:** caching the Chromium download keeps each run to ~1–2 min, so
+  a daily run uses well under 100 of the 2,000 free private-repo Actions
+  minutes/month.
 - Secrets: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` mapped from GitHub
   Secrets to env.
 
