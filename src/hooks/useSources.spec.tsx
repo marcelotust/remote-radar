@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { describe, it, expect } from 'vitest'
 import { useSources } from './useSources'
 import { useAddSource, useDeleteSource } from './useSourceMutations'
+import { MOCK_SOURCES } from '../data/mockData'
 
 const makeWrapper = () => {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
@@ -12,10 +13,12 @@ const makeWrapper = () => {
 }
 
 describe('useSources', () => {
-  it('returns the mock sources list', async () => {
+  it('returns the seeded sources list', async () => {
     const { result } = renderHook(() => useSources(), { wrapper: makeWrapper() })
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
-    expect(result.current.data).toHaveLength(2)
+    expect(result.current.data).toHaveLength(MOCK_SOURCES.length)
+    expect(result.current.data?.some((s) => s.label === 'Lever Jobs')).toBe(true)
+    expect(result.current.data?.some((s) => s.label === 'Remote OK')).toBe(true)
   })
 })
 

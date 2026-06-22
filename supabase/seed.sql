@@ -14,8 +14,59 @@ where not exists (select 1 from companies c where c.name = v.name);
 
 -- Scraping sources ----------------------------------------------------------
 insert into scraping_sources (url, label, is_active) values
+  -- Existentes
   ('https://jobs.lever.co',        'Lever Jobs', true),
-  ('https://boards.greenhouse.io', 'Greenhouse', true)
+  ('https://boards.greenhouse.io', 'Greenhouse', true),
+  -- Agregador Generalista
+  ('https://www.linkedin.com',     'LinkedIn',     true),
+  ('https://www.indeed.com',       'Indeed',       true),
+  ('https://www.glassdoor.com',    'Glassdoor',    true),
+  ('https://www.ziprecruiter.com', 'ZipRecruiter', true),
+  ('https://www.jobot.com',        'Jobot',        true),
+  -- Tech e Startups
+  ('https://wellfound.com',           'Wellfound',         true),
+  ('https://otta.com',                'Otta',              true),
+  ('https://builtin.com',             'Built In',          true),
+  ('https://www.dice.com',            'Dice',              true),
+  ('https://www.workatstartup.com',   'Work at a Startup', true),
+  -- Exclusivo Remoto
+  ('https://remoteok.com',            'Remote OK',        true),
+  ('https://weworkremotely.com',      'We Work Remotely', true),
+  ('https://remotive.io',             'Remotive',         true),
+  ('https://jobspresso.co',           'Jobspresso',       true),
+  ('https://www.workingnomads.com',   'Working Nomads',   true),
+  ('https://justremote.co',           'JustRemote',       true),
+  ('https://euremotejobs.com',        'EU Remote Jobs',   true),
+  -- Nichos Específicos
+  ('https://jsremotely.com',          'JS Remotely',     true),
+  ('https://theaijobboard.com',       'AI Jobs',         true),
+  ('https://remotewoman.com',         'Remote Woman',    true),
+  ('https://remotecircle.com',        'Remote Circle',   true),
+  ('https://vanhack.com',             'VanHack',         true),
+  ('https://workinestonia.com/job',   'Work In Estonia', true),
+  -- Marketplaces e Redes de Talentos
+  ('https://www.toptal.com',          'Toptal',          true),
+  ('https://www.turing.com',          'Turing',          true),
+  ('https://arc.dev',                 'Arc.dev',         true),
+  ('https://jobbers.io',              'Jobbers.io',      true),
+  ('https://lemon.io',                'Lemon.io',        true),
+  ('https://clouddevs.com',           'CloudDevs',       true),
+  ('https://gun.io',                  'Gun.io',          true),
+  ('https://andela.com',              'Andela',          true),
+  ('https://www.upwork.com',          'Upwork',          true),
+  ('https://www.fiverr.com',          'Fiverr',          true),
+  ('https://www.usebraintrust.com',   'Braintrust',      true),
+  ('https://hubstafftalent.net',      'Hubstaff Talent', true),
+  -- Brasil e América Latina
+  ('https://revelo.com.br',                'Revelo',          true),
+  ('https://www.tecla.io',                 'Tecla',           true),
+  ('https://onstrider.com',                'Strider',         true),
+  ('https://www.bairesdev.com',            'BairesDev',       true),
+  ('https://remotar.com.br',               'Remotar',         true),
+  ('https://www.jobnagringa.com.br',       'JobNaGringa',     true),
+  ('https://www.workana.com',              'Workana',         true),
+  ('https://github.com/frontendbr/vagas',  'FrontendBR Vagas', true),
+  ('https://github.com/backend-br/vagas',  'BackendBR Vagas',  true)
 on conflict (url) do nothing;
 
 -- Jobs ----------------------------------------------------------------------
