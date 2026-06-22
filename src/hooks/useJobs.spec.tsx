@@ -53,6 +53,11 @@ describe('useUpdateJobStatus', () => {
       const updated = jobsResult.current.data?.find((j) => j.id === 'j1')
       expect(updated?.status).toBe('applied')
     })
+
+    // onSettled triggers a background invalidate/refetch; the Supabase fake
+    // persists the update, so the status stays 'applied' after the refetch.
+    await waitFor(() => expect(mutResult.current.isSuccess).toBe(true))
+    expect(jobsResult.current.data?.find((j) => j.id === 'j1')?.status).toBe('applied')
   })
 })
 

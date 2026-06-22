@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { useMemo } from 'react'
-import { MOCK_JOBS } from '../data/mockData'
+import { supabase } from '../lib/supabase'
 import { computeRelevanceScore } from '../utils/scoring'
 import { KEYWORD_CONFIG } from '../utils/keywords'
 import { useCompanies } from './useCompanies'
@@ -18,7 +18,11 @@ export const useJobs = () => {
 
   return useQuery<Job[]>({
     queryKey: JOBS_KEY,
-    queryFn: async () => structuredClone(MOCK_JOBS),
+    queryFn: async () => {
+      const { data, error } = await supabase.from('jobs').select('*')
+      if (error) throw error
+      return data as Job[]
+    },
     select: (rawJobs) =>
       rawJobs
         .map((job) => {
