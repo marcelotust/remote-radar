@@ -8,12 +8,13 @@ import type { Job } from '../types'
 
 const applyFilters = (
   jobs: Job[],
-  filters: { status: string; relevance: string; wishlistOnly: boolean }
+  filters: { status: string; relevance: string; wishlistOnly: boolean; unreadOnly: boolean }
 ): Job[] =>
   jobs.filter((job) => {
     if (filters.status !== 'all' && job.status !== filters.status) return false
     if (filters.relevance !== 'all' && job.relevance_level !== filters.relevance) return false
     if (filters.wishlistOnly && !job.is_wishlist_company) return false
+    if (filters.unreadOnly && job.read) return false
     return true
   })
 

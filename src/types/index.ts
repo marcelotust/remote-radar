@@ -1,4 +1,4 @@
-export type JobStatus = 'unseen' | 'seen' | 'applied' | 'dismissed'
+export type JobStatus = 'none' | 'applied' | 'dismissed'
 export type RemoteBrazilStatus = 'unknown' | 'yes' | 'no'
 export type RelevanceLevel = 'high' | 'medium' | 'low' | 'negative'
 
@@ -12,6 +12,7 @@ export interface Job {
   posted_at: string | null
   scraped_at: string
   status: JobStatus
+  read: boolean
   source_url: string | null
   relevance_score?: number
   relevance_level?: RelevanceLevel
@@ -48,4 +49,5 @@ export interface FilterState {
   status: StatusFilter
   relevance: RelevanceFilter
   wishlistOnly: boolean
+  unreadOnly: boolean
 }

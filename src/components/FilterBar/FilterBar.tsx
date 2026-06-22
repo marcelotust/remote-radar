@@ -15,8 +15,7 @@ export const FilterBar = () => {
           className="bg-gray-800 text-gray-300 text-xs rounded px-2 py-1 border border-gray-700"
         >
           <option value="all">Todos</option>
-          <option value="unseen">Não visto</option>
-          <option value="seen">Visto</option>
+          <option value="none">Sem status</option>
           <option value="applied">Candidatado</option>
           <option value="dismissed">Descartado</option>
         </select>
@@ -47,6 +46,17 @@ export const FilterBar = () => {
           className="rounded border-gray-700"
         />
         Wishlist
+      </label>
+
+      <label className="flex items-center gap-2 text-sm text-gray-400">
+        <input
+          type="checkbox"
+          aria-label="Não lidas"
+          checked={filters.unreadOnly}
+          onChange={(e) => setFilters({ unreadOnly: e.target.checked })}
+          className="rounded border-gray-700"
+        />
+        Não lidas
       </label>
     </div>
   )

@@ -6,8 +6,7 @@ interface Props {
 }
 
 const OPTIONS: { value: JobStatus; label: string }[] = [
-  { value: 'unseen', label: 'Não visto' },
-  { value: 'seen', label: 'Visto' },
+  { value: 'none', label: 'Sem status' },
   { value: 'applied', label: 'Candidatado' },
   { value: 'dismissed', label: 'Descartado' },
 ]

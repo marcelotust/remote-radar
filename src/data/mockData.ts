@@ -54,7 +54,8 @@ export const MOCK_JOBS: Job[] = [
     description: 'We are looking for a React TypeScript engineer with Next.js experience.',
     posted_at: '2026-06-19T00:00:00Z',
     scraped_at: '2026-06-20T06:00:00Z',
-    status: 'unseen',
+    status: 'none',
+    read: false,
     source_url: 'https://jobs.lever.co',
   },
   {
@@ -66,7 +67,8 @@ export const MOCK_JOBS: Job[] = [
     description: 'PHP and Java backend with some frontend work.',
     posted_at: '2026-06-18T00:00:00Z',
     scraped_at: '2026-06-20T06:00:00Z',
-    status: 'unseen',
+    status: 'none',
+    read: false,
     source_url: 'https://boards.greenhouse.io',
   },
   {
@@ -78,7 +80,8 @@ export const MOCK_JOBS: Job[] = [
     description: 'React frontend developer. Must work presencial.',
     posted_at: '2026-06-17T00:00:00Z',
     scraped_at: '2026-06-20T06:00:00Z',
-    status: 'seen',
+    status: 'none',
+    read: true,
     source_url: 'https://jobs.lever.co',
   },
 ]
