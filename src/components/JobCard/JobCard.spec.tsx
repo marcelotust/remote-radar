@@ -21,7 +21,8 @@ const baseJob: Job = {
   description: 'React TypeScript role',
   posted_at: '2026-06-19T00:00:00Z',
   scraped_at: '2026-06-20T06:00:00Z',
-  status: 'unseen',
+  status: 'none',
+  read: false,
   source_url: null,
   relevance_score: 3,
   relevance_level: 'high',
@@ -68,10 +69,28 @@ describe('JobCard', () => {
     render(<JobCard job={baseJob} />, { wrapper: makeWrapper() })
     const select = screen.getByRole('combobox')
     // The StatusDropdown renders based on job.status prop; interaction calls mutate
-    await userEvent.selectOptions(select, 'seen')
+    await userEvent.selectOptions(select, 'applied')
     // After selecting, the select value is controlled by the QueryClient optimistic update
     // Just verify the interaction doesn't throw
     expect(select).toBeInTheDocument()
+  })
+
+  it('renders a read/unread toggle reflecting the unread state', () => {
+    render(<JobCard job={baseJob} />, { wrapper: makeWrapper() })
+    expect(screen.getByRole('button', { name: /marcar como lida/i })).toBeInTheDocument()
+  })
+
+  it('shows "marcar como não lida" when the job is already read', () => {
+    render(<JobCard job={{ ...baseJob, read: true }} />, { wrapper: makeWrapper() })
+    expect(screen.getByRole('button', { name: /marcar como não lida/i })).toBeInTheDocument()
+  })
+
+  it('toggles read state when the toggle is clicked', async () => {
+    render(<JobCard job={baseJob} />, { wrapper: makeWrapper() })
+    const toggle = screen.getByRole('button', { name: /marcar como lida/i })
+    await userEvent.click(toggle)
+    // interaction should not throw; mutation runs against the query cache
+    expect(toggle).toBeInTheDocument()
   })
 
   it('renders location when present', () => {

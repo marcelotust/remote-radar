@@ -27,6 +27,18 @@ describe('FilterBar', () => {
     expect(screen.getByLabelText(/wishlist/i)).toBeInTheDocument()
   })
 
+  it('renders unread only toggle', () => {
+    renderFilterBar()
+    expect(screen.getByLabelText(/não lidas/i)).toBeInTheDocument()
+  })
+
+  it('updates context when unread toggle changes', async () => {
+    renderFilterBar()
+    const checkbox = screen.getByLabelText(/não lidas/i)
+    await userEvent.click(checkbox)
+    expect(checkbox).toBeChecked()
+  })
+
   it('updates context when status filter changes', async () => {
     renderFilterBar()
     await userEvent.selectOptions(screen.getByLabelText(/status/i), 'applied')

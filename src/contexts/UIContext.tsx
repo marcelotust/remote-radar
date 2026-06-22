@@ -21,6 +21,7 @@ export const UIProvider = ({ children }: { children: React.ReactNode }) => {
     status: 'all',
     relevance: 'all',
     wishlistOnly: false,
+    unreadOnly: false,
   })
   const [companyModalOpen, setCompanyModalOpen] = useState(false)
   const [sourceModalOpen, setSourceModalOpen] = useState(false)

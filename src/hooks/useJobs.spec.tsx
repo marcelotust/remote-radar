@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { describe, it, expect } from 'vitest'
 import { useJobs } from './useJobs'
 import { useUpdateJobStatus } from './useUpdateJobStatus'
+import { useToggleJobRead } from './useToggleJobRead'
 
 const makeWrapper = () => {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
@@ -51,6 +52,38 @@ describe('useUpdateJobStatus', () => {
     await waitFor(() => {
       const updated = jobsResult.current.data?.find((j) => j.id === 'j1')
       expect(updated?.status).toBe('applied')
+    })
+  })
+})
+
+describe('useToggleJobRead', () => {
+  it('optimistically marks an unread job as read', async () => {
+    const wrapper = makeWrapper()
+    const { result: jobsResult } = renderHook(() => useJobs(), { wrapper })
+    await waitFor(() => expect(jobsResult.current.isSuccess).toBe(true))
+    expect(jobsResult.current.data?.find((j) => j.id === 'j1')?.read).toBe(false)
+
+    const { result: mutResult } = renderHook(() => useToggleJobRead(), { wrapper })
+    mutResult.current.mutate({ id: 'j1', read: true })
+
+    await waitFor(() => {
+      const updated = jobsResult.current.data?.find((j) => j.id === 'j1')
+      expect(updated?.read).toBe(true)
+    })
+  })
+
+  it('can mark a read job as unread', async () => {
+    const wrapper = makeWrapper()
+    const { result: jobsResult } = renderHook(() => useJobs(), { wrapper })
+    await waitFor(() => expect(jobsResult.current.isSuccess).toBe(true))
+    expect(jobsResult.current.data?.find((j) => j.id === 'j3')?.read).toBe(true)
+
+    const { result: mutResult } = renderHook(() => useToggleJobRead(), { wrapper })
+    mutResult.current.mutate({ id: 'j3', read: false })
+
+    await waitFor(() => {
+      const updated = jobsResult.current.data?.find((j) => j.id === 'j3')
+      expect(updated?.read).toBe(false)
     })
   })
 })
