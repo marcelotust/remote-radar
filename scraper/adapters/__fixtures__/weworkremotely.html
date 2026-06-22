@@ -1,24 +1,45 @@
 <!doctype html>
 <html>
   <body>
+    <!-- Mirrors the live weworkremotely.com listing markup (reconciled 2026-06-22):
+         job links use a.listing-link--unlocked with new-listing__* child classes. -->
     <section class="jobs">
       <article>
         <ul>
-          <li class="feature">
-            <a href="/remote-jobs/acme-senior-react-engineer">
-              <span class="title">Senior React Engineer</span>
-              <span class="company">Acme</span>
-              <span class="region company">Anywhere (100% Remote)</span>
+          <li>
+            <a
+              class="listing-link--unlocked"
+              href="/remote-jobs/proxify-ab-senior-fullstack-developer-python-3"
+            >
+              <div class="new-listing paid-logo">
+                <div class="new-listing__header">
+                  <h3 class="new-listing__header__title">
+                    <span class="new-listing__header__title__text"
+                      >Senior Fullstack Developer (Python)</span
+                    >
+                    <i class="new-listing__header__title__hot-icon" aria-label="Hot job"></i>
+                  </h3>
+                </div>
+                <p class="new-listing__company-name">Proxify AB<img alt="" role="presentation" /></p>
+                <p class="new-listing__company-headquarters">Sweden</p>
+              </div>
             </a>
           </li>
           <li>
-            <a href="/remote-jobs/globex-typescript-developer">
-              <span class="title">TypeScript Developer</span>
-              <span class="company">Globex</span>
-              <span class="region company">Europe Only</span>
+            <a class="listing-link--unlocked" href="/remote-jobs/nomad-senior-software-engineer-ii">
+              <div class="new-listing">
+                <div class="new-listing__header">
+                  <h3 class="new-listing__header__title">
+                    <span class="new-listing__header__title__text">Senior Software Engineer II</span>
+                  </h3>
+                </div>
+                <p class="new-listing__company-name">Nomad</p>
+                <p class="new-listing__company-headquarters">Denver CO</p>
+              </div>
             </a>
           </li>
-          <li class="view-all"><a href="/remote-full-stack-programming-jobs">View all</a></li>
+          <!-- non-job CTA link under section.jobs: has no title span, must be skipped -->
+          <li><a id="post-job-cta" href="/remote-jobs/find-your-plan">Post a job</a></li>
         </ul>
       </article>
     </section>

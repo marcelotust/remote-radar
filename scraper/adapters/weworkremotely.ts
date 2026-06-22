@@ -10,15 +10,15 @@ export const parseWeWorkRemotely = (html: string): RawJob[] => {
   const anchors = Array.from(document.querySelectorAll('section.jobs li a[href^="/remote-jobs/"]'))
   const jobs: RawJob[] = []
   for (const a of anchors) {
-    const title = text(a.querySelector('.title'))
-    const company = text(a.querySelector('.company'))
+    const title = text(a.querySelector('.new-listing__header__title__text'))
+    const company = text(a.querySelector('.new-listing__company-name'))
     const href = a.getAttribute('href')
     if (!title || !company || !href) continue
     jobs.push({
       title,
       company,
       url: `${BASE}${href}`,
-      location: text(a.querySelector('.region')),
+      location: text(a.querySelector('.new-listing__company-headquarters')),
       description: null,
     })
   }
