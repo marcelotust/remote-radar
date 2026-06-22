@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { describe, it, expect } from 'vitest'
 import { SourceCard } from './SourceCard'
+import { UIProvider } from '../../contexts/UIContext'
 import type { ScrapingSource } from '../../types'
 
 const source: ScrapingSource = {
@@ -16,7 +17,9 @@ const source: ScrapingSource = {
 const makeWrapper = () => {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return ({ children }: { children: React.ReactNode }) => (
-    <QueryClientProvider client={qc}>{children}</QueryClientProvider>
+    <QueryClientProvider client={qc}>
+      <UIProvider>{children}</UIProvider>
+    </QueryClientProvider>
   )
 }
 
@@ -39,6 +42,16 @@ describe('SourceCard', () => {
   it('has a delete button', () => {
     render(<SourceCard source={source} />, { wrapper: makeWrapper() })
     expect(screen.getByRole('button', { name: /excluir/i })).toBeInTheDocument()
+  })
+
+  it('has an edit button', () => {
+    render(<SourceCard source={source} />, { wrapper: makeWrapper() })
+    expect(screen.getByRole('button', { name: /editar/i })).toBeInTheDocument()
+  })
+
+  it('clicking edit button does not throw', async () => {
+    render(<SourceCard source={source} />, { wrapper: makeWrapper() })
+    await userEvent.click(screen.getByRole('button', { name: /editar/i }))
   })
 
   it('clicking delete button calls deleteSource without error', async () => {

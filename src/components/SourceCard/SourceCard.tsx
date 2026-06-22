@@ -1,4 +1,5 @@
 import { useDeleteSource, useEditSource } from '../../hooks/useSourceMutations'
+import { useUIContext } from '../../contexts/UIContext'
 import type { ScrapingSource } from '../../types'
 
 interface Props {
@@ -8,6 +9,12 @@ interface Props {
 export const SourceCard = ({ source }: Props) => {
   const { mutate: deleteSource } = useDeleteSource()
   const { mutate: editSource } = useEditSource()
+  const { setEditingSource, setSourceModalOpen } = useUIContext()
+
+  const handleEdit = () => {
+    setEditingSource(source)
+    setSourceModalOpen(true)
+  }
 
   return (
     <article className="bg-gray-900 border border-gray-800 rounded-lg p-4 flex flex-col gap-2">
@@ -26,13 +33,22 @@ export const SourceCard = ({ source }: Props) => {
 
       <p className="text-gray-500 text-xs truncate">{source.url}</p>
 
-      <button
-        onClick={() => deleteSource(source.id)}
-        aria-label="Excluir"
-        className="self-start text-xs text-red-400 hover:text-red-300 transition-colors mt-1"
-      >
-        Excluir
-      </button>
+      <div className="flex items-center gap-2 mt-1">
+        <button
+          onClick={handleEdit}
+          aria-label="Editar"
+          className="text-xs text-gray-400 hover:text-white transition-colors"
+        >
+          Editar
+        </button>
+        <button
+          onClick={() => deleteSource(source.id)}
+          aria-label="Excluir"
+          className="text-xs text-red-400 hover:text-red-300 transition-colors"
+        >
+          Excluir
+        </button>
+      </div>
     </article>
   )
 }
