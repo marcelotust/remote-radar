@@ -18,12 +18,12 @@ describe('weworkremotely adapter', () => {
     const jobs = weworkremotely.parse(html)
     expect(jobs).toHaveLength(2)
     expect(jobs[0]).toEqual({
-      title: 'Senior React Engineer',
-      company: 'Acme',
-      url: 'https://weworkremotely.com/remote-jobs/acme-senior-react-engineer',
-      location: 'Anywhere (100% Remote)',
+      title: 'Senior Fullstack Developer (Python)',
+      company: 'Proxify AB',
+      url: 'https://weworkremotely.com/remote-jobs/proxify-ab-senior-fullstack-developer-python-3',
+      location: 'Sweden',
       description: null,
     })
-    expect(jobs[1].company).toBe('Globex')
+    expect(jobs[1].company).toBe('Nomad')
   })
 })
