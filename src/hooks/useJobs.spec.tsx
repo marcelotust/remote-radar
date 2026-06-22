@@ -1,9 +1,10 @@
 import { renderHook, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { describe, it, expect } from 'vitest'
-import { useJobs } from './useJobs'
+import { useJobs, enrichJobs } from './useJobs'
 import { useUpdateJobStatus } from './useUpdateJobStatus'
 import { useToggleJobRead } from './useToggleJobRead'
+import type { Job, Company } from '../types'
 
 const makeWrapper = () => {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
@@ -90,5 +91,50 @@ describe('useToggleJobRead', () => {
       const updated = jobsResult.current.data?.find((j) => j.id === 'j3')
       expect(updated?.read).toBe(false)
     })
+  })
+})
+
+const baseJob = (over: Partial<Job>): Job => ({
+  id: 'j',
+  title: 'Dev',
+  company: 'X',
+  url: 'u',
+  location: null,
+  description: null,
+  posted_at: null,
+  scraped_at: '',
+  status: 'none',
+  read: false,
+  source_url: null,
+  ...over,
+})
+
+describe('enrichJobs', () => {
+  it('prefers a stored relevance score over recomputing', () => {
+    const job = baseJob({
+      title: 'React TypeScript Remote',
+      relevance_score: 99,
+      relevance_level: 'high',
+    })
+    const [out] = enrichJobs([job], [])
+    expect(out.relevance_score).toBe(99) // not the ~3 a recompute would give
+    expect(out.relevance_level).toBe('high')
+  })
+
+  it('computes the score when none is stored', () => {
+    const job = baseJob({ title: 'React TypeScript Remote' })
+    const [out] = enrichJobs([job], [])
+    expect(out.relevance_score).toBe(3)
+    expect(out.relevance_level).toBe('high')
+  })
+
+  it('flags wishlist companies', () => {
+    const job = baseJob({ company: 'Stripe' })
+    const companies: Company[] = [
+      { id: 'c', name: 'Stripe', website: null, notes: null, remote_brazil: 'yes', created_at: '' },
+    ]
+    const [out] = enrichJobs([job], companies)
+    expect(out.is_wishlist_company).toBe(true)
+    expect(out.wishlist_remote_brazil).toBe('yes')
   })
 })

@@ -48,3 +48,29 @@ describe('computeRelevanceScore', () => {
     expect(() => computeRelevanceScore(job, config)).not.toThrow()
   })
 })
+
+describe('computeRelevanceScore word boundaries', () => {
+  const boundaryConfig: KeywordConfig = {
+    positive: ['react', 'c#', '.net'],
+    negative: ['java'],
+  }
+
+  it('does not match a keyword inside a larger word', () => {
+    const job = { title: 'Senior JavaScript Engineer', description: null }
+    // "java" must NOT match inside "javascript"
+    const { score } = computeRelevanceScore(job, boundaryConfig)
+    expect(score).toBe(0)
+  })
+
+  it('still matches standalone keywords next to punctuation', () => {
+    const job = { title: 'React, C# and .NET developer', description: null }
+    const { score } = computeRelevanceScore(job, boundaryConfig)
+    expect(score).toBe(3)
+  })
+
+  it('matches a whole-word negative keyword', () => {
+    const job = { title: 'Java Backend Engineer', description: null }
+    const { score } = computeRelevanceScore(job, boundaryConfig)
+    expect(score).toBe(-1)
+  })
+})

@@ -15,7 +15,10 @@ create table if not exists jobs (
   status      text not null default 'none'
               check (status in ('none', 'applied', 'dismissed')),
   read        boolean not null default false,
-  source_url  text
+  source_url  text,
+  relevance_score int,
+  relevance_level text
+              check (relevance_level in ('high', 'medium', 'low', 'negative'))
 );
 
 create table if not exists companies (
