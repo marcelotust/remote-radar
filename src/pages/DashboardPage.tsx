@@ -31,6 +31,13 @@ export const DashboardPage = () => {
   const { pageItems, totalPages } = paginate(filteredJobs, page)
   const selectedJob = jobs.find((j) => j.id === selectedId) ?? null
 
+  // Retain the last selected job so the mobile sheet slides away with its
+  // content instead of going blank when selection clears on close.
+  const [sheetJob, setSheetJob] = useState<Job | null>(null)
+  useEffect(() => {
+    if (selectedJob) setSheetJob(selectedJob)
+  }, [selectedJob])
+
   const handleSelect = (job: Job) => {
     setSelectedId(job.id)
     if (!job.read) toggleRead({ id: job.id, read: true })
@@ -89,7 +96,7 @@ export const DashboardPage = () => {
       </main>
 
       <BottomSheet open={!!selectedJob} onClose={() => setSelectedId(null)}>
-        {selectedJob && <JobDetail job={selectedJob} />}
+        {sheetJob && <JobDetail job={sheetJob} />}
       </BottomSheet>
     </div>
   )

@@ -45,4 +45,19 @@ describe('BottomSheet', () => {
     await userEvent.keyboard('{Escape}')
     expect(onClose).toHaveBeenCalledTimes(1)
   })
+
+  it('locks body scroll while open and restores it on close', () => {
+    const { rerender } = render(
+      <BottomSheet open onClose={() => {}}>
+        <p>Detail body</p>
+      </BottomSheet>
+    )
+    expect(document.body.style.overflow).toBe('hidden')
+    rerender(
+      <BottomSheet open={false} onClose={() => {}}>
+        <p>Detail body</p>
+      </BottomSheet>
+    )
+    expect(document.body.style.overflow).toBe('')
+  })
 })

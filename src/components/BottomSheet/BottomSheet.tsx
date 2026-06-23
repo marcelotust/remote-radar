@@ -10,6 +10,10 @@ interface Props {
  * Neon Bubble mobile bottom sheet (#9). Pure React + Tailwind: slides up via a
  * translate-y transition, stays mounted through the exit animation, and closes
  * on backdrop click or Escape. Hidden on lg+ (desktop uses the split-view panel).
+ *
+ * Callers should keep `children` populated through the exit animation (don't
+ * clear them in the same render that sets `open=false`), otherwise the sheet
+ * slides away empty. See DashboardPage's `sheetJob` retention.
  */
 export const BottomSheet = ({ open, onClose, children }: Props) => {
   const [mounted, setMounted] = useState(open)
@@ -34,6 +38,15 @@ export const BottomSheet = ({ open, onClose, children }: Props) => {
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
   }, [open, onClose])
+
+  useEffect(() => {
+    if (!open) return
+    const previous = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = previous
+    }
+  }, [open])
 
   if (!mounted) return null
 

@@ -83,4 +83,19 @@ describe('DashboardPage', () => {
       ).toBeGreaterThan(0)
     )
   })
+
+  it('keeps the sheet detail mounted through the close animation', async () => {
+    render(<DashboardPage />, { wrapper: makeWrapper() })
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: /senior frontend engineer/i })).toBeInTheDocument()
+    )
+    await userEvent.click(screen.getByRole('button', { name: /senior frontend engineer/i }))
+    // close the mobile sheet via its backdrop button
+    await userEvent.click(screen.getByRole('button', { name: /fechar detalhes/i }))
+    // the sheet stays mounted during the exit animation and must retain its
+    // detail (not go blank): the job title is still present in the sheet
+    expect(
+      screen.getAllByRole('heading', { name: /senior frontend engineer/i }).length
+    ).toBeGreaterThan(0)
+  })
 })
