@@ -1,1 +1,46 @@
 @import 'tailwindcss';
+
+/* New palette (#1), cool/slate dark (direction A).
+   Overriding the in-use Tailwind color tokens re-points every existing
+   utility (bg-gray-950, text-green-400, …) — no component edits needed. */
+@theme {
+  /* Neutrals → direction-A cool dark surfaces */
+  --color-gray-950: #0f1115;
+  --color-gray-900: #181b21;
+  --color-gray-800: #272b33;
+  --color-gray-700: #3a3f49;
+  --color-gray-600: #5b616b;
+  --color-gray-500: #7c828d;
+  --color-gray-400: #9aa0ab;
+  --color-gray-300: #c7ccd4;
+  --color-gray-200: #e7e9ee;
+
+  /* Blue → brand blue #91a0ed (primary / links) */
+  --color-blue-600: #7d8ee8;
+  --color-blue-500: #91a0ed;
+  --color-blue-400: #a3b0f0;
+  --color-blue-300: #b8c2f4;
+
+  /* Green / emerald → brand green #90eda2 (high relevance / success) */
+  --color-green-500: #90eda2;
+  --color-green-400: #a6f1b4;
+  --color-emerald-600: #7fe095;
+  --color-emerald-500: #90eda2;
+
+  /* Yellow / amber → brand yellow #edd791 (medium relevance) */
+  --color-yellow-500: #edd791;
+  --color-yellow-400: #f1dea3;
+  --color-amber-400: #edd791;
+
+  /* Red → brand pink #ed919e (negative / dismiss / destructive) */
+  --color-red-500: #ed919e;
+  --color-red-400: #f0a3ae;
+  --color-red-300: #f4b8c0;
+
+  /* Brand tokens for future semantic use (e.g. #9) */
+  --color-brand-green: #90eda2;
+  --color-brand-yellow: #edd791;
+  --color-brand-pink: #ed919e;
+  --color-brand-blue: #91a0ed;
+  --color-brand-gray: #616562;
+}
