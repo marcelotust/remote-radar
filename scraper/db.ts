@@ -16,6 +16,15 @@ export interface JobRow {
   relevance_level: string
 }
 
+export type SourceRunStatus = 'success' | 'error'
+
+export interface SourceRunResult {
+  url: string
+  status: SourceRunStatus
+  jobsAdded: number
+  error: string | null
+}
+
 type DbClient = Pick<SupabaseClient, 'from'>
 
 export const createScraperClient = (): SupabaseClient => {
@@ -44,4 +53,17 @@ export const upsertJobs = async (client: DbClient, jobs: JobRow[]): Promise<{ co
     .select('url')
   if (error) throw error
   return { count: data?.length ?? 0 }
+}
+
+export const recordSourceRun = async (client: DbClient, result: SourceRunResult): Promise<void> => {
+  const { error } = await client
+    .from('scraping_sources')
+    .update({
+      last_run_at: new Date().toISOString(),
+      last_run_jobs_added: result.jobsAdded,
+      last_run_status: result.status,
+      last_run_error: result.error,
+    })
+    .eq('url', result.url)
+  if (error) throw error
 }

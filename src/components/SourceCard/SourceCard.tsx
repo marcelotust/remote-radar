@@ -1,6 +1,7 @@
 import { useDeleteSource, useEditSource } from '../../hooks/useSourceMutations'
 import { useUIContext } from '../../contexts/UIContext'
 import type { ScrapingSource } from '../../types'
+import { formatLastRun } from './formatLastRun'
 
 interface Props {
   source: ScrapingSource
@@ -10,6 +11,14 @@ export const SourceCard = ({ source }: Props) => {
   const { mutate: deleteSource } = useDeleteSource()
   const { mutate: editSource } = useEditSource()
   const { setEditingSource, setSourceModalOpen } = useUIContext()
+
+  const lastRun = formatLastRun(source)
+  const lastRunClass =
+    lastRun.tone === 'error'
+      ? 'text-amber-400'
+      : lastRun.tone === 'ok'
+        ? 'text-gray-400'
+        : 'text-gray-600'
 
   const handleEdit = () => {
     setEditingSource(source)
@@ -32,6 +41,10 @@ export const SourceCard = ({ source }: Props) => {
       </div>
 
       <p className="text-gray-500 text-xs truncate">{source.url}</p>
+
+      <p className={`text-xs ${lastRunClass}`} title={lastRun.title}>
+        {lastRun.text}
+      </p>
 
       <div className="flex items-center gap-2 mt-1">
         <button

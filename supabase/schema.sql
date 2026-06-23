@@ -32,11 +32,15 @@ create table if not exists companies (
 );
 
 create table if not exists scraping_sources (
-  id         uuid primary key default gen_random_uuid(),
-  url        text not null unique,
-  label      text not null,
-  is_active  boolean not null default true,
-  created_at timestamptz default now()
+  id                  uuid primary key default gen_random_uuid(),
+  url                 text not null unique,
+  label               text not null,
+  is_active           boolean not null default true,
+  created_at          timestamptz default now(),
+  last_run_at         timestamptz,
+  last_run_jobs_added int,
+  last_run_status     text check (last_run_status in ('success', 'error')),
+  last_run_error      text
 );
 
 -- Row Level Security ---------------------------------------------------------

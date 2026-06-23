@@ -21,14 +21,21 @@ const baseDeps = (over: Partial<PipelineDeps>): PipelineDeps => ({
   renderPage: async () => '<html></html>',
   scoreJob: () => ({ relevance_score: 2, relevance_level: 'medium' }),
   upsertJobs: async (jobs) => ({ count: jobs.length }),
+  recordSourceRun: async () => {},
   ...over,
 })
 
 describe('runScrape', () => {
-  it('extracts, scores, and upserts rows with source_url', async () => {
+  it('extracts, scores, and upserts rows with source_url + per-source result', async () => {
     const upsertJobs = vi.fn(async (jobs) => ({ count: jobs.length }))
     const summary = await runScrape(baseDeps({ upsertJobs }))
-    expect(summary).toEqual({ sources: 1, extracted: 1, inserted: 1, failedSources: 0 })
+    expect(summary).toEqual({
+      sources: 1,
+      extracted: 1,
+      inserted: 1,
+      failedSources: 0,
+      perSource: [{ url: 'https://a.com', status: 'success', jobsAdded: 1, error: null }],
+    })
     expect(upsertJobs).toHaveBeenCalledWith([
       {
         title: 'Dev',
@@ -43,7 +50,23 @@ describe('runScrape', () => {
     ])
   })
 
-  it('isolates a failing source and still upserts the rest', async () => {
+  it('records a success result with jobsAdded 0 when a source yields no jobs', async () => {
+    const recordSourceRun = vi.fn(async () => {})
+    const summary = await runScrape(
+      baseDeps({ resolveAdapter: () => adapter([]), recordSourceRun })
+    )
+    expect(summary.perSource).toEqual([
+      { url: 'https://a.com', status: 'success', jobsAdded: 0, error: null },
+    ])
+    expect(recordSourceRun).toHaveBeenCalledWith({
+      url: 'https://a.com',
+      status: 'success',
+      jobsAdded: 0,
+      error: null,
+    })
+  })
+
+  it('isolates a failing source, records an error result, and still upserts the rest', async () => {
     const sources = [
       { url: 'https://bad.com', label: 'Bad' },
       { url: 'https://good.com', label: 'Good' },
@@ -53,10 +76,39 @@ describe('runScrape', () => {
       return '<html></html>'
     })
     const resolveAdapter = () => adapter([{ title: 'Dev', url: 'https://good.com/1' }])
-    const upsertJobs = vi.fn(async (jobs) => ({ count: jobs.length }))
+    const recordSourceRun = vi.fn(async () => {})
     const summary = await runScrape(
-      baseDeps({ fetchActiveSources: async () => sources, renderPage, resolveAdapter, upsertJobs })
+      baseDeps({
+        fetchActiveSources: async () => sources,
+        renderPage,
+        resolveAdapter,
+        recordSourceRun,
+      })
     )
-    expect(summary).toEqual({ sources: 2, extracted: 1, inserted: 1, failedSources: 1 })
+    expect(summary.sources).toBe(2)
+    expect(summary.inserted).toBe(1)
+    expect(summary.failedSources).toBe(1)
+    expect(summary.perSource[0]).toEqual({
+      url: 'https://bad.com',
+      status: 'error',
+      jobsAdded: 0,
+      error: 'render timeout',
+    })
+    expect(summary.perSource[1]).toEqual({
+      url: 'https://good.com',
+      status: 'success',
+      jobsAdded: 1,
+      error: null,
+    })
+    expect(recordSourceRun).toHaveBeenCalledTimes(2)
+  })
+
+  it('does not abort the run when recordSourceRun itself throws', async () => {
+    const recordSourceRun = vi.fn(async () => {
+      throw new Error('metadata write failed')
+    })
+    const summary = await runScrape(baseDeps({ recordSourceRun }))
+    expect(summary.inserted).toBe(1)
+    expect(summary.perSource).toHaveLength(1)
   })
 })

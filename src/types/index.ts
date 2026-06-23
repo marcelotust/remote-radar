@@ -35,6 +35,10 @@ export interface ScrapingSource {
   label: string
   is_active: boolean
   created_at: string
+  last_run_at?: string | null
+  last_run_jobs_added?: number | null
+  last_run_status?: 'success' | 'error' | null
+  last_run_error?: string | null
 }
 
 export interface KeywordConfig {
