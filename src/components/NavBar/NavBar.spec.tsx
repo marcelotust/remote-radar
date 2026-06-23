@@ -3,39 +3,32 @@ import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect } from 'vitest'
 import { NavBar } from './NavBar'
 
-const renderNavBar = (initialEntries = ['/']) =>
+const renderAt = (path: string) =>
   render(
-    <MemoryRouter initialEntries={initialEntries}>
+    <MemoryRouter initialEntries={[path]}>
       <NavBar />
     </MemoryRouter>
   )
 
 describe('NavBar', () => {
-  it('renders the app name', () => {
-    renderNavBar()
-    expect(screen.getByText(/Remote Radar/i)).toBeInTheDocument()
+  it('renders all five navigation links', () => {
+    renderAt('/')
+    expect(screen.getByRole('link', { name: 'Home' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Inbox' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Empresas' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Fontes' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Settings' })).toBeInTheDocument()
   })
 
-  it('has a link to the dashboard', () => {
-    renderNavBar()
-    expect(screen.getByRole('link', { name: /dashboard/i })).toHaveAttribute('href', '/')
+  it('marks the active link with the brand-green class', () => {
+    renderAt('/companies')
+    expect(screen.getByRole('link', { name: 'Empresas' }).className).toContain('text-brand-green')
+    expect(screen.getByRole('link', { name: 'Home' }).className).not.toContain('text-brand-green')
   })
 
-  it('has a link to wishlist', () => {
-    renderNavBar()
-    expect(screen.getByRole('link', { name: /wishlist/i })).toHaveAttribute('href', '/wishlist')
-  })
-
-  it('Dashboard link is active on /', () => {
-    renderNavBar(['/'])
-    expect(screen.getByRole('link', { name: /dashboard/i })).toHaveAttribute('aria-current', 'page')
-  })
-
-  it('Dashboard link is NOT active when on /wishlist', () => {
-    renderNavBar(['/wishlist'])
-    expect(screen.getByRole('link', { name: /dashboard/i })).not.toHaveAttribute(
-      'aria-current',
-      'page'
-    )
+  it('marks Home active only on the exact root path', () => {
+    renderAt('/inbox')
+    expect(screen.getByRole('link', { name: 'Home' }).className).not.toContain('text-brand-green')
+    expect(screen.getByRole('link', { name: 'Inbox' }).className).toContain('text-brand-green')
   })
 })
