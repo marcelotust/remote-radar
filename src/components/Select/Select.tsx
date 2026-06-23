@@ -11,6 +11,8 @@ interface Props<T extends string> {
   options: SelectOption<T>[]
   /** Accessible name for the combobox (used as aria-label). */
   ariaLabel?: string
+  /** Id of a visible element naming the combobox (sets aria-labelledby). */
+  labelledBy?: string
   /** Forwarded to the trigger so a visible <label htmlFor> can target it. */
   id?: string
   className?: string
@@ -31,6 +33,7 @@ export function Select<T extends string>({
   onChange,
   options,
   ariaLabel,
+  labelledBy,
   id,
   className,
   block,
@@ -87,15 +90,24 @@ export function Select<T extends string>({
     }
   }
 
+  const onBlur = (e: React.FocusEvent) => {
+    if (!ref.current?.contains(e.relatedTarget as Node | null)) setOpen(false)
+  }
+
   return (
-    <div ref={ref} className={`relative ${block ? 'w-full' : ''} ${className ?? ''}`}>
+    <div
+      ref={ref}
+      onBlur={onBlur}
+      className={`relative ${block ? 'w-full' : ''} ${className ?? ''}`}
+    >
       <button
         type="button"
         id={id}
         role="combobox"
         aria-haspopup="listbox"
         aria-expanded={open}
-        aria-label={ariaLabel}
+        aria-label={labelledBy ? undefined : ariaLabel}
+        aria-labelledby={labelledBy}
         onClick={() => setOpen((o) => !o)}
         onKeyDown={onKeyDown}
         className={`${triggerClass} ${block ? 'w-full' : ''}`}
@@ -109,7 +121,11 @@ export function Select<T extends string>({
       {open && (
         <ul
           role="listbox"
-          aria-label={ariaLabel}
+          aria-label={labelledBy ? undefined : ariaLabel}
+          aria-labelledby={labelledBy}
+          // Keep focus on the trigger so the onBlur close handler doesn't fire
+          // (and unmount the option) before the click selects it.
+          onMouseDown={(e) => e.preventDefault()}
           className="absolute left-0 z-20 mt-1 min-w-full bg-brand-input rounded-2xl border-2 border-brand-green/20 p-1 shadow-neon-input"
         >
           {options.map((o, i) => {
