@@ -17,15 +17,17 @@ export const JobCard = ({ job }: Props) => {
 
   return (
     <article
-      className={`border rounded-lg p-4 flex flex-col gap-3 transition-colors ${
-        job.read
-          ? 'bg-gray-900 border-gray-800 hover:border-gray-700'
-          : 'bg-gray-900/80 border-gray-700 hover:border-gray-600'
+      className={`bg-brand-surface rounded-3xl border-2 p-5 flex flex-col gap-3 transition-all duration-300 hover:border-brand-green/60 hover:shadow-neon-card ${
+        job.read ? 'border-brand-gray/20' : 'border-brand-green/20'
       }`}
     >
       <div className="flex items-center gap-2 flex-wrap">
         {!job.read && (
-          <span aria-hidden="true" className="w-2 h-2 rounded-full bg-blue-400" title="Não lida" />
+          <span
+            aria-hidden="true"
+            className="w-2 h-2 rounded-full bg-brand-green shadow-neon-active"
+            title="Não lida"
+          />
         )}
         {job.relevance_level && <ScoreBadge level={job.relevance_level} />}
         {job.is_wishlist_company && job.wishlist_remote_brazil && (
@@ -36,7 +38,7 @@ export const JobCard = ({ job }: Props) => {
             type="button"
             aria-label={job.read ? 'Marcar como não lida' : 'Marcar como lida'}
             onClick={() => toggleRead({ id: job.id, read: !job.read })}
-            className="text-xs text-gray-400 hover:text-gray-200 border border-gray-700 rounded px-2 py-1 transition-colors"
+            className="text-xs text-gray-400 hover:text-brand-green border-2 border-brand-gray/30 hover:border-brand-green/60 rounded-2xl px-3 py-1 transition-all duration-300"
           >
             {job.read ? 'Não lida' : 'Lida'}
           </button>

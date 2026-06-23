@@ -16,7 +16,7 @@ export const StatusDropdown = ({ value, onChange }: Props) => (
     aria-label="Status da vaga"
     value={value}
     onChange={(e) => onChange(e.target.value as JobStatus)}
-    className="bg-gray-800 text-gray-300 text-xs rounded px-2 py-1 border border-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-600"
+    className="bg-brand-input text-gray-300 text-xs rounded-2xl px-3 py-1.5 border-2 border-brand-green/20 transition-all duration-300 focus:outline-none focus:border-brand-green focus:bg-brand-green/5 focus:shadow-neon-input"
   >
     {OPTIONS.map((opt) => (
       <option key={opt.value} value={opt.value}>
