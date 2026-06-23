@@ -102,11 +102,11 @@ export const AddCompanyModal = () => {
           <div className="flex flex-col gap-1 text-sm text-gray-400">
             <span id="remote-brazil-label">Contrata remote do Brasil?</span>
             <Select
-              ariaLabel="Contrata remote do Brasil?"
+              labelledBy="remote-brazil-label"
               value={remoteBrazil}
               onChange={setRemoteBrazil}
               options={REMOTE_OPTIONS}
-              className="w-full"
+              block
             />
           </div>
           <div className="flex justify-end gap-2 mt-2">
