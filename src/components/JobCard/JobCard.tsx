@@ -4,6 +4,7 @@ import { StatusDropdown } from '../StatusDropdown/StatusDropdown'
 import { NetworkingButton } from '../NetworkingButton/NetworkingButton'
 import { useUpdateJobStatus } from '../../hooks/useUpdateJobStatus'
 import { useToggleJobRead } from '../../hooks/useToggleJobRead'
+import { relativeDate } from '../../utils/relativeDate'
 import type { Job } from '../../types'
 
 interface Props {
@@ -58,6 +59,7 @@ export const JobCard = ({ job }: Props) => {
           {job.company}
           {job.location && <span className="text-gray-600"> · {job.location}</span>}
         </p>
+        <p className="text-gray-600 text-xs mt-1">adicionado {relativeDate(job.scraped_at)}</p>
       </div>
 
       <div className="flex items-center gap-2 mt-1">
