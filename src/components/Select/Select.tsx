@@ -14,6 +14,8 @@ interface Props<T extends string> {
   /** Forwarded to the trigger so a visible <label htmlFor> can target it. */
   id?: string
   className?: string
+  /** Stretch the trigger to fill its container (e.g. inside a form). */
+  block?: boolean
 }
 
 const triggerClass =
@@ -31,6 +33,7 @@ export function Select<T extends string>({
   ariaLabel,
   id,
   className,
+  block,
 }: Props<T>) {
   const [open, setOpen] = useState(false)
   const [active, setActive] = useState(0)
@@ -85,7 +88,7 @@ export function Select<T extends string>({
   }
 
   return (
-    <div ref={ref} className={`relative ${className ?? ''}`}>
+    <div ref={ref} className={`relative ${block ? 'w-full' : ''} ${className ?? ''}`}>
       <button
         type="button"
         id={id}
@@ -95,7 +98,7 @@ export function Select<T extends string>({
         aria-label={ariaLabel}
         onClick={() => setOpen((o) => !o)}
         onKeyDown={onKeyDown}
-        className={triggerClass}
+        className={`${triggerClass} ${block ? 'w-full' : ''}`}
       >
         <span>{selected?.label}</span>
         <span aria-hidden="true" className="text-brand-gray">

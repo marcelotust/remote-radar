@@ -106,7 +106,7 @@ export const AddCompanyModal = () => {
               value={remoteBrazil}
               onChange={setRemoteBrazil}
               options={REMOTE_OPTIONS}
-              className="w-full"
+              block
             />
           </div>
           <div className="flex justify-end gap-2 mt-2">
