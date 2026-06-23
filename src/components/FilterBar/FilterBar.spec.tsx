@@ -41,14 +41,16 @@ describe('FilterBar', () => {
 
   it('updates context when status filter changes', async () => {
     renderFilterBar()
-    await userEvent.selectOptions(screen.getByLabelText(/status/i), 'applied')
-    expect(screen.getByLabelText(/status/i)).toHaveValue('applied')
+    await userEvent.click(screen.getByLabelText(/status/i))
+    await userEvent.click(screen.getByRole('option', { name: 'Candidatado' }))
+    expect(screen.getByLabelText(/status/i)).toHaveTextContent('Candidatado')
   })
 
   it('updates context when relevance filter changes', async () => {
     renderFilterBar()
-    await userEvent.selectOptions(screen.getByLabelText(/relevância/i), 'high')
-    expect(screen.getByLabelText(/relevância/i)).toHaveValue('high')
+    await userEvent.click(screen.getByLabelText(/relevância/i))
+    await userEvent.click(screen.getByRole('option', { name: 'Alta' }))
+    expect(screen.getByLabelText(/relevância/i)).toHaveTextContent('Alta')
   })
 
   it('updates context when wishlist toggle changes', async () => {

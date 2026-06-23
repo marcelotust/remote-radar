@@ -18,7 +18,7 @@ export const DashboardPage = () => {
   const { pageItems, totalPages } = paginate(filteredJobs, page)
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white">
+    <div className="min-h-screen bg-brand-bg text-white">
       <NavBar />
       <FilterBar />
       <main className="max-w-3xl mx-auto px-4 py-6 flex flex-col gap-4">
@@ -35,7 +35,7 @@ export const DashboardPage = () => {
               type="button"
               onClick={() => setPage((p) => p - 1)}
               disabled={page <= 1}
-              className="border border-gray-700 rounded px-3 py-1 hover:text-white disabled:opacity-40 disabled:hover:text-gray-400 transition-colors"
+              className="border-2 border-brand-gray/30 rounded-2xl px-3 py-1 hover:text-brand-green hover:border-brand-green/60 disabled:opacity-40 disabled:hover:text-gray-400 disabled:hover:border-brand-gray/30 transition-all duration-300"
             >
               Anterior
             </button>
@@ -46,7 +46,7 @@ export const DashboardPage = () => {
               type="button"
               onClick={() => setPage((p) => p + 1)}
               disabled={page >= totalPages}
-              className="border border-gray-700 rounded px-3 py-1 hover:text-white disabled:opacity-40 disabled:hover:text-gray-400 transition-colors"
+              className="border-2 border-brand-gray/30 rounded-2xl px-3 py-1 hover:text-brand-green hover:border-brand-green/60 disabled:opacity-40 disabled:hover:text-gray-400 disabled:hover:border-brand-gray/30 transition-all duration-300"
             >
               Próxima
             </button>

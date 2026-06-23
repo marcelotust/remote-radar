@@ -1,3 +1,4 @@
+import { Select } from '../Select/Select'
 import type { JobStatus } from '../../types'
 
 interface Props {
@@ -12,16 +13,5 @@ const OPTIONS: { value: JobStatus; label: string }[] = [
 ]
 
 export const StatusDropdown = ({ value, onChange }: Props) => (
-  <select
-    aria-label="Status da vaga"
-    value={value}
-    onChange={(e) => onChange(e.target.value as JobStatus)}
-    className="bg-gray-800 text-gray-300 text-xs rounded px-2 py-1 border border-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-600"
-  >
-    {OPTIONS.map((opt) => (
-      <option key={opt.value} value={opt.value}>
-        {opt.label}
-      </option>
-    ))}
-  </select>
+  <Select value={value} onChange={onChange} options={OPTIONS} ariaLabel="Status da vaga" />
 )

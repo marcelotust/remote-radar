@@ -69,9 +69,10 @@ describe('JobCard', () => {
     render(<JobCard job={baseJob} />, { wrapper: makeWrapper() })
     const select = screen.getByRole('combobox')
     // The StatusDropdown renders based on job.status prop; interaction calls mutate
-    await userEvent.selectOptions(select, 'applied')
-    // After selecting, the select value is controlled by the QueryClient optimistic update
-    // Just verify the interaction doesn't throw
+    await userEvent.click(select)
+    await userEvent.click(screen.getByRole('option', { name: /candidatado/i }))
+    // After selecting, the value is controlled by the QueryClient optimistic update;
+    // just verify the interaction doesn't throw and the trigger persists
     expect(select).toBeInTheDocument()
   })
 

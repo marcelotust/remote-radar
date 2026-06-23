@@ -42,5 +42,18 @@
   --color-brand-yellow: #edd791;
   --color-brand-pink: #ed919e;
   --color-brand-blue: #91a0ed;
+  --color-brand-purple: #91a0ed; /* alias of brand-blue, per issue #40 */
   --color-brand-gray: #616562;
+
+  /* Neon Bubble surfaces (#40) */
+  --color-brand-bg: #121215; /* main app background */
+  --color-brand-surface: #151518; /* cards & main containers */
+  --color-brand-input: #1a1a1f; /* inputs, selects, dropdown menus */
+}
+
+/* Reusable Neon Bubble shadows (#40) */
+@theme {
+  --shadow-neon-card: 0 0 30px rgba(144, 237, 162, 0.15);
+  --shadow-neon-input: 0 0 15px rgba(144, 237, 162, 0.15);
+  --shadow-neon-active: 0 0 10px rgba(144, 237, 162, 0.3);
 }

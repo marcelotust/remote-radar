@@ -12,14 +12,14 @@ const LABEL: Record<RelevanceLevel, string> = {
 }
 
 const COLOR: Record<RelevanceLevel, string> = {
-  high: 'bg-green-500/20 text-green-400',
-  medium: 'bg-yellow-500/20 text-yellow-400',
-  low: 'bg-gray-500/20 text-gray-400',
-  negative: 'bg-red-500/20 text-red-400',
+  high: 'bg-brand-green/15 text-brand-green border border-brand-green/30',
+  medium: 'bg-brand-yellow/15 text-brand-yellow border border-brand-yellow/30',
+  low: 'bg-brand-gray/15 text-gray-400 border border-brand-gray/30',
+  negative: 'bg-brand-pink/15 text-brand-pink border border-brand-pink/30',
 }
 
 export const ScoreBadge = ({ level }: Props) => (
-  <span className={`inline-flex px-2 py-0.5 rounded text-xs font-semibold ${COLOR[level]}`}>
+  <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-semibold ${COLOR[level]}`}>
     {LABEL[level]}
   </span>
 )

@@ -1,7 +1,17 @@
 import { useState, useEffect } from 'react'
 import { useUIContext } from '../../contexts/UIContext'
 import { useAddCompany, useEditCompany } from '../../hooks/useCompanyMutations'
+import { Select } from '../Select/Select'
 import type { RemoteBrazilStatus } from '../../types'
+
+const inputClass =
+  'bg-brand-input text-white border-2 border-brand-green/20 rounded-2xl px-3 py-2 text-sm transition-all duration-300 focus:outline-none focus:border-brand-green focus:bg-brand-green/5 focus:shadow-neon-input'
+
+const REMOTE_OPTIONS: { value: RemoteBrazilStatus; label: string }[] = [
+  { value: 'unknown', label: 'Não confirmado' },
+  { value: 'yes', label: 'Sim' },
+  { value: 'no', label: 'Não' },
+]
 
 export const AddCompanyModal = () => {
   const { companyModalOpen, setCompanyModalOpen, editingCompany, setEditingCompany } =
@@ -57,7 +67,7 @@ export const AddCompanyModal = () => {
       aria-modal="true"
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
     >
-      <div className="bg-gray-900 border border-gray-700 rounded-lg p-6 w-full max-w-md">
+      <div className="bg-brand-surface border-2 border-brand-green/20 rounded-3xl p-6 w-full max-w-md shadow-neon-card">
         <h2 className="text-white font-semibold text-lg mb-4">
           {editingCompany ? 'Editar Empresa' : 'Adicionar Empresa'}
         </h2>
@@ -69,7 +79,7 @@ export const AddCompanyModal = () => {
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="bg-gray-800 text-white border border-gray-700 rounded px-3 py-2 text-sm"
+              className={inputClass}
             />
           </label>
           <label className="flex flex-col gap-1 text-sm text-gray-400">
@@ -77,7 +87,7 @@ export const AddCompanyModal = () => {
             <input
               value={website}
               onChange={(e) => setWebsite(e.target.value)}
-              className="bg-gray-800 text-white border border-gray-700 rounded px-3 py-2 text-sm"
+              className={inputClass}
             />
           </label>
           <label className="flex flex-col gap-1 text-sm text-gray-400">
@@ -86,33 +96,31 @@ export const AddCompanyModal = () => {
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={2}
-              className="bg-gray-800 text-white border border-gray-700 rounded px-3 py-2 text-sm resize-none"
+              className={`${inputClass} resize-none`}
             />
           </label>
-          <label className="flex flex-col gap-1 text-sm text-gray-400">
-            Contrata remote do Brasil?
-            <select
+          <div className="flex flex-col gap-1 text-sm text-gray-400">
+            <span id="remote-brazil-label">Contrata remote do Brasil?</span>
+            <Select
+              ariaLabel="Contrata remote do Brasil?"
               value={remoteBrazil}
-              onChange={(e) => setRemoteBrazil(e.target.value as RemoteBrazilStatus)}
-              className="bg-gray-800 text-white border border-gray-700 rounded px-3 py-2 text-sm"
-            >
-              <option value="unknown">Não confirmado</option>
-              <option value="yes">Sim</option>
-              <option value="no">Não</option>
-            </select>
-          </label>
+              onChange={setRemoteBrazil}
+              options={REMOTE_OPTIONS}
+              className="w-full"
+            />
+          </div>
           <div className="flex justify-end gap-2 mt-2">
             <button
               type="button"
               onClick={handleClose}
               aria-label="Cancelar"
-              className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors"
+              className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-all duration-300"
             >
               Cancelar
             </button>
             <button
               type="submit"
-              className="px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-500 transition-colors"
+              className="px-5 py-2 text-sm bg-brand-green text-black font-medium rounded-2xl hover:shadow-neon-active transition-all duration-300"
             >
               {editingCompany ? 'Salvar' : 'Adicionar'}
             </button>
