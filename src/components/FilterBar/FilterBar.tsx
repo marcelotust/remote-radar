@@ -1,9 +1,22 @@
 import { useUIContext } from '../../contexts/UIContext'
 import { Toggle } from '../Toggle/Toggle'
+import { Select } from '../Select/Select'
 import type { StatusFilter, RelevanceFilter } from '../../types'
 
-const selectClass =
-  'bg-brand-input text-gray-300 text-xs rounded-2xl px-3 py-1.5 border-2 border-brand-green/20 transition-all duration-300 focus:outline-none focus:border-brand-green focus:bg-brand-green/5 focus:shadow-neon-input'
+const STATUS_OPTIONS: { value: StatusFilter; label: string }[] = [
+  { value: 'all', label: 'Todos' },
+  { value: 'none', label: 'Sem status' },
+  { value: 'applied', label: 'Candidatado' },
+  { value: 'dismissed', label: 'Descartado' },
+]
+
+const RELEVANCE_OPTIONS: { value: RelevanceFilter; label: string }[] = [
+  { value: 'all', label: 'Todas' },
+  { value: 'high', label: 'Alta' },
+  { value: 'medium', label: 'Média' },
+  { value: 'low', label: 'Baixa' },
+  { value: 'negative', label: 'Negativa' },
+]
 
 export const FilterBar = () => {
   const { filters, setFilters } = useUIContext()
@@ -12,33 +25,24 @@ export const FilterBar = () => {
     <div className="flex flex-wrap items-center gap-4 px-6 py-3 bg-brand-bg border-b border-brand-gray/20">
       <div className="flex items-center gap-2 text-sm text-gray-400">
         <label htmlFor="status-filter">Status</label>
-        <select
+        <Select
           id="status-filter"
+          ariaLabel="Status"
           value={filters.status}
-          onChange={(e) => setFilters({ status: e.target.value as StatusFilter })}
-          className={selectClass}
-        >
-          <option value="all">Todos</option>
-          <option value="none">Sem status</option>
-          <option value="applied">Candidatado</option>
-          <option value="dismissed">Descartado</option>
-        </select>
+          onChange={(status) => setFilters({ status })}
+          options={STATUS_OPTIONS}
+        />
       </div>
 
       <div className="flex items-center gap-2 text-sm text-gray-400">
         <label htmlFor="relevance-filter">Relevância</label>
-        <select
+        <Select
           id="relevance-filter"
+          ariaLabel="Relevância"
           value={filters.relevance}
-          onChange={(e) => setFilters({ relevance: e.target.value as RelevanceFilter })}
-          className={selectClass}
-        >
-          <option value="all">Todas</option>
-          <option value="high">Alta</option>
-          <option value="medium">Média</option>
-          <option value="low">Baixa</option>
-          <option value="negative">Negativa</option>
-        </select>
+          onChange={(relevance) => setFilters({ relevance })}
+          options={RELEVANCE_OPTIONS}
+        />
       </div>
 
       <Toggle

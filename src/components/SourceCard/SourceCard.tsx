@@ -1,5 +1,6 @@
 import { useDeleteSource, useEditSource } from '../../hooks/useSourceMutations'
 import { useUIContext } from '../../contexts/UIContext'
+import { Toggle } from '../Toggle/Toggle'
 import type { ScrapingSource } from '../../types'
 import { formatLastRun } from './formatLastRun'
 
@@ -15,7 +16,7 @@ export const SourceCard = ({ source }: Props) => {
   const lastRun = formatLastRun(source)
   const lastRunClass =
     lastRun.tone === 'error'
-      ? 'text-amber-400'
+      ? 'text-brand-yellow'
       : lastRun.tone === 'ok'
         ? 'text-gray-400'
         : 'text-gray-600'
@@ -26,18 +27,15 @@ export const SourceCard = ({ source }: Props) => {
   }
 
   return (
-    <article className="bg-gray-900 border border-gray-800 rounded-lg p-4 flex flex-col gap-2">
+    <article className="bg-brand-surface border-2 border-brand-green/20 rounded-3xl p-5 flex flex-col gap-2 transition-all duration-300 hover:border-brand-green/60 hover:shadow-neon-card">
       <div className="flex items-center justify-between gap-2">
         <span className="text-white font-semibold text-sm">{source.label}</span>
-        <label className="flex items-center gap-1.5 text-xs text-gray-400 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={source.is_active}
-            onChange={(e) => editSource({ ...source, is_active: e.target.checked })}
-            className="rounded border-gray-700"
-          />
-          Ativo
-        </label>
+        <Toggle
+          id={`source-active-${source.id}`}
+          label="Ativo"
+          checked={source.is_active}
+          onChange={(checked) => editSource({ ...source, is_active: checked })}
+        />
       </div>
 
       <p className="text-gray-500 text-xs truncate">{source.url}</p>
@@ -50,14 +48,14 @@ export const SourceCard = ({ source }: Props) => {
         <button
           onClick={handleEdit}
           aria-label="Editar"
-          className="text-xs text-gray-400 hover:text-white transition-colors"
+          className="text-xs text-gray-400 hover:text-brand-green transition-all duration-300"
         >
           Editar
         </button>
         <button
           onClick={() => deleteSource(source.id)}
           aria-label="Excluir"
-          className="text-xs text-red-400 hover:text-red-300 transition-colors"
+          className="text-xs text-brand-pink hover:text-brand-pink/80 transition-all duration-300"
         >
           Excluir
         </button>

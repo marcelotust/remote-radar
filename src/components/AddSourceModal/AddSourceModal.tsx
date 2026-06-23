@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react'
 import { useUIContext } from '../../contexts/UIContext'
 import { useAddSource, useEditSource } from '../../hooks/useSourceMutations'
 
+const inputClass =
+  'bg-brand-input text-white border-2 border-brand-green/20 rounded-2xl px-3 py-2 text-sm transition-all duration-300 focus:outline-none focus:border-brand-green focus:bg-brand-green/5 focus:shadow-neon-input'
+
 export const AddSourceModal = () => {
   const { sourceModalOpen, setSourceModalOpen, editingSource, setEditingSource } = useUIContext()
   const { mutate: addSource } = useAddSource()
@@ -43,7 +46,7 @@ export const AddSourceModal = () => {
       aria-modal="true"
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
     >
-      <div className="bg-gray-900 border border-gray-700 rounded-lg p-6 w-full max-w-md">
+      <div className="bg-brand-surface border-2 border-brand-green/20 rounded-3xl p-6 w-full max-w-md shadow-neon-card">
         <h2 className="text-white font-semibold text-lg mb-4">
           {editingSource ? 'Editar Fonte' : 'Adicionar Fonte'}
         </h2>
@@ -55,7 +58,7 @@ export const AddSourceModal = () => {
               required
               value={label}
               onChange={(e) => setLabel(e.target.value)}
-              className="bg-gray-800 text-white border border-gray-700 rounded px-3 py-2 text-sm"
+              className={inputClass}
             />
           </label>
           <label className="flex flex-col gap-1 text-sm text-gray-400">
@@ -66,7 +69,7 @@ export const AddSourceModal = () => {
               type="url"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
-              className="bg-gray-800 text-white border border-gray-700 rounded px-3 py-2 text-sm"
+              className={inputClass}
             />
           </label>
           <div className="flex justify-end gap-2 mt-2">
@@ -74,13 +77,13 @@ export const AddSourceModal = () => {
               type="button"
               onClick={handleClose}
               aria-label="Cancelar"
-              className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors"
+              className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-all duration-300"
             >
               Cancelar
             </button>
             <button
               type="submit"
-              className="px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-500 transition-colors"
+              className="px-5 py-2 text-sm bg-brand-green text-black font-medium rounded-2xl hover:shadow-neon-active transition-all duration-300"
             >
               {editingSource ? 'Salvar' : 'Adicionar'}
             </button>

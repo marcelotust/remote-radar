@@ -18,7 +18,7 @@ export const CompanyCard = ({ company }: Props) => {
   }
 
   return (
-    <article className="bg-gray-900 border border-gray-800 rounded-lg p-4 flex flex-col gap-2">
+    <article className="bg-brand-surface border-2 border-brand-green/20 rounded-3xl p-5 flex flex-col gap-2 transition-all duration-300 hover:border-brand-green/60 hover:shadow-neon-card">
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-white font-semibold">{company.name}</span>
@@ -32,7 +32,7 @@ export const CompanyCard = ({ company }: Props) => {
           href={company.website}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-xs text-blue-400 hover:text-blue-300 underline truncate"
+          className="text-xs text-brand-purple hover:text-brand-purple/80 underline underline-offset-2 truncate transition-all duration-300"
         >
           {company.website}
         </a>
@@ -44,14 +44,14 @@ export const CompanyCard = ({ company }: Props) => {
         <button
           onClick={handleEdit}
           aria-label="Editar"
-          className="text-xs text-gray-400 hover:text-white transition-colors"
+          className="text-xs text-gray-400 hover:text-brand-green transition-all duration-300"
         >
           Editar
         </button>
         <button
           onClick={() => deleteCompany(company.id)}
           aria-label="Excluir"
-          className="text-xs text-red-400 hover:text-red-300 transition-colors"
+          className="text-xs text-brand-pink hover:text-brand-pink/80 transition-all duration-300"
         >
           Excluir
         </button>

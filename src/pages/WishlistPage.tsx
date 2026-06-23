@@ -14,7 +14,7 @@ export const WishlistPage = () => {
   const { setCompanyModalOpen, setSourceModalOpen } = useUIContext()
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white">
+    <div className="min-h-screen bg-brand-bg text-white">
       <NavBar />
       <main className="max-w-5xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-2 gap-8">
         <section className="flex flex-col gap-4">
@@ -23,7 +23,7 @@ export const WishlistPage = () => {
             <button
               onClick={() => setCompanyModalOpen(true)}
               aria-label="Adicionar empresa"
-              className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-500 transition-colors"
+              className="px-4 py-1.5 text-sm bg-brand-green text-black font-medium rounded-2xl hover:shadow-neon-active transition-all duration-300"
             >
               + Adicionar empresa
             </button>
@@ -41,7 +41,7 @@ export const WishlistPage = () => {
               <button
                 onClick={() => setSourceModalOpen(true)}
                 aria-label="Adicionar fonte"
-                className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-500 transition-colors"
+                className="px-4 py-1.5 text-sm bg-brand-green text-black font-medium rounded-2xl hover:shadow-neon-active transition-all duration-300"
               >
                 + Adicionar fonte
               </button>

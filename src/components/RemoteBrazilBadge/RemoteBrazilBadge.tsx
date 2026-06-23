@@ -11,13 +11,13 @@ const LABEL: Record<RemoteBrazilStatus, string> = {
 }
 
 const COLOR: Record<RemoteBrazilStatus, string> = {
-  yes: 'bg-green-500/20 text-green-400',
-  unknown: 'bg-gray-500/20 text-gray-400',
-  no: 'bg-red-500/20 text-red-400',
+  yes: 'bg-brand-green/15 text-brand-green border border-brand-green/30',
+  unknown: 'bg-brand-gray/15 text-gray-400 border border-brand-gray/30',
+  no: 'bg-brand-pink/15 text-brand-pink border border-brand-pink/30',
 }
 
 export const RemoteBrazilBadge = ({ status }: Props) => (
-  <span className={`inline-flex px-2 py-0.5 rounded text-xs font-semibold ${COLOR[status]}`}>
+  <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-semibold ${COLOR[status]}`}>
     {LABEL[status]}
   </span>
 )

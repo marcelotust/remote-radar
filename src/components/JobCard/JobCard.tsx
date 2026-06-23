@@ -69,7 +69,7 @@ export const JobCard = ({ job }: Props) => {
           href={job.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-xs text-blue-400 hover:text-blue-300 underline"
+          className="text-xs text-brand-green hover:text-brand-green/80 underline underline-offset-2 transition-all duration-300"
         >
           Ver vaga
         </a>
