@@ -4,19 +4,7 @@ import { FilterBar } from '../components/FilterBar/FilterBar'
 import { JobCard } from '../components/JobCard/JobCard'
 import { useJobs } from '../hooks/useJobs'
 import { useUIContext } from '../contexts/UIContext'
-import type { Job } from '../types'
-
-const applyFilters = (
-  jobs: Job[],
-  filters: { status: string; relevance: string; wishlistOnly: boolean; unreadOnly: boolean }
-): Job[] =>
-  jobs.filter((job) => {
-    if (filters.status !== 'all' && job.status !== filters.status) return false
-    if (filters.relevance !== 'all' && job.relevance_level !== filters.relevance) return false
-    if (filters.wishlistOnly && !job.is_wishlist_company) return false
-    if (filters.unreadOnly && job.read) return false
-    return true
-  })
+import { applyFilters } from './dashboardFilters'
 
 export const DashboardPage = () => {
   const { data: jobs = [], isLoading } = useJobs()
