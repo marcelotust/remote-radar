@@ -69,4 +69,32 @@ describe('SourceCard', () => {
     render(<SourceCard source={inactiveSource} />, { wrapper: makeWrapper() })
     expect(screen.getByRole('checkbox')).not.toBeChecked()
   })
+
+  it('shows "nunca" when the source has no last run', () => {
+    render(<SourceCard source={source} />, { wrapper: makeWrapper() })
+    expect(screen.getByText(/Última run: nunca/)).toBeInTheDocument()
+  })
+
+  it('shows the jobs-added count on a successful last run', () => {
+    const ran = {
+      ...source,
+      last_run_at: '2026-06-22T09:00:00Z',
+      last_run_status: 'success' as const,
+      last_run_jobs_added: 4,
+    }
+    render(<SourceCard source={ran} />, { wrapper: makeWrapper() })
+    expect(screen.getByText(/4 vagas novas/)).toBeInTheDocument()
+  })
+
+  it('shows "falhou" with the error as a title on a failed last run', () => {
+    const failed = {
+      ...source,
+      last_run_at: '2026-06-22T09:00:00Z',
+      last_run_status: 'error' as const,
+      last_run_error: 'render timeout',
+    }
+    render(<SourceCard source={failed} />, { wrapper: makeWrapper() })
+    const line = screen.getByText(/falhou/)
+    expect(line).toHaveAttribute('title', 'render timeout')
+  })
 })
