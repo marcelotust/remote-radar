@@ -98,4 +98,9 @@ describe('JobCard', () => {
     // location shows as "· Remote" span; check by containing text element
     expect(screen.getAllByText(/Remote/).length).toBeGreaterThan(0)
   })
+
+  it('shows the relative added-date from scraped_at', () => {
+    render(<JobCard job={baseJob} />, { wrapper: makeWrapper() })
+    expect(screen.getByText(/^adicionado /)).toBeInTheDocument()
+  })
 })

@@ -26,7 +26,10 @@ export const enrichJobs = (rawJobs: Job[], companies: Company[]): Job[] => {
         wishlist_remote_brazil: wishlistCompany?.remote_brazil,
       }
     })
-    .sort((a, b) => (b.relevance_score ?? 0) - (a.relevance_score ?? 0))
+    .sort((a, b) => {
+      const t = new Date(b.scraped_at).getTime() - new Date(a.scraped_at).getTime()
+      return t !== 0 ? t : (b.relevance_score ?? 0) - (a.relevance_score ?? 0)
+    })
 }
 
 export const useJobs = () => {
