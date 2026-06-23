@@ -137,4 +137,23 @@ describe('enrichJobs', () => {
     expect(out.is_wishlist_company).toBe(true)
     expect(out.wishlist_remote_brazil).toBe('yes')
   })
+
+  it('orders by scraped_at descending (newest first)', () => {
+    const older = baseJob({ id: 'old', scraped_at: '2026-06-01T00:00:00Z' })
+    const newer = baseJob({ id: 'new', scraped_at: '2026-06-10T00:00:00Z' })
+    const out = enrichJobs([older, newer], [])
+    expect(out.map((j) => j.id)).toEqual(['new', 'old'])
+  })
+
+  it('breaks scraped_at ties by relevance_score descending', () => {
+    // same scraped_at; titles give different computed relevance
+    const lowScore = baseJob({ id: 'low', title: 'Manager', scraped_at: '2026-06-05T00:00:00Z' })
+    const highScore = baseJob({
+      id: 'high',
+      title: 'React TypeScript Remote Engineer',
+      scraped_at: '2026-06-05T00:00:00Z',
+    })
+    const out = enrichJobs([lowScore, highScore], [])
+    expect(out.map((j) => j.id)).toEqual(['high', 'low'])
+  })
 })
