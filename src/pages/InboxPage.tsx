@@ -18,8 +18,6 @@ export const InboxPage = () => {
   const { filters } = useUIContext()
   const { mutate: toggleRead } = useToggleJobRead()
 
-  const filteredJobs = useMemo(() => applyFilters(jobs, filters), [jobs, filters])
-
   const [page, setPage] = useState(1)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   useEffect(() => {
@@ -27,7 +25,20 @@ export const InboxPage = () => {
     setSelectedId(null)
   }, [filters])
 
-  const { pageItems, totalPages } = paginate(filteredJobs, page)
+  // Keep the currently open job visible even if it stops matching the filter
+  // (e.g. it just became "read" under the unread-only filter), so it doesn't
+  // vanish from under the user. Released when the selection or filter changes
+  // (the latter resets selectedId above).
+  const visibleJobs = useMemo(() => {
+    const filtered = applyFilters(jobs, filters)
+    if (!selectedId || filtered.some((j) => j.id === selectedId)) return filtered
+    if (!jobs.some((j) => j.id === selectedId)) return filtered
+    const keep = new Set(filtered.map((j) => j.id))
+    keep.add(selectedId)
+    return jobs.filter((j) => keep.has(j.id))
+  }, [jobs, filters, selectedId])
+
+  const { pageItems, totalPages } = paginate(visibleJobs, page)
   const selectedJob = jobs.find((j) => j.id === selectedId) ?? null
 
   const [sheetJob, setSheetJob] = useState<Job | null>(null)
@@ -46,7 +57,7 @@ export const InboxPage = () => {
       <main className="mx-auto flex max-w-6xl flex-col px-4 py-6 lg:flex-row lg:items-start lg:gap-6">
         <div className="flex w-full flex-col gap-1 lg:w-2/5">
           {isLoading && <p className="text-sm text-gray-500">Carregando vagas...</p>}
-          {!isLoading && filteredJobs.length === 0 && (
+          {!isLoading && visibleJobs.length === 0 && (
             <p className="text-sm text-gray-500">Nenhuma vaga encontrada.</p>
           )}
           {pageItems.map((job) => (
