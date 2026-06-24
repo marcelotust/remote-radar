@@ -16,7 +16,11 @@ export const HomePage = () => {
   const unreadCount = useMemo(() => jobs.filter((j) => !j.read).length, [jobs])
 
   const highlights = useMemo(
-    () => [...jobs].sort((a, b) => (b.relevance_score ?? 0) - (a.relevance_score ?? 0)).slice(0, 5),
+    () =>
+      jobs
+        .filter((j) => j.status !== 'dismissed' && (j.relevance_score ?? 0) > 0)
+        .sort((a, b) => (b.relevance_score ?? 0) - (a.relevance_score ?? 0))
+        .slice(0, 5),
     [jobs]
   )
 

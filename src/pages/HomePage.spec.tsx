@@ -26,6 +26,30 @@ describe('HomePage', () => {
     expect(screen.getByRole('link', { name: /ver inbox/i })).toHaveAttribute('href', '/inbox')
   })
 
+  it('excludes dismissed jobs from the highlights even when they score high', async () => {
+    // High positive-keyword title (react/typescript/frontend/remote) so it would
+    // otherwise rank into the top-5 — but it is dismissed and must not appear.
+    await supabase.from('jobs').insert({
+      title: 'Dismissed React TypeScript Frontend Remote Role',
+      company: 'Dismissed Co',
+      url: 'https://dismissed/1',
+      location: null,
+      description: null,
+      posted_at: null,
+      scraped_at: '2026-06-20T06:00:00Z',
+      status: 'dismissed',
+      read: false,
+      source_url: null,
+    })
+    render(<HomePage />, { wrapper: makeWrapper() })
+    await waitFor(() => {
+      expect(screen.getByText('Senior Frontend Engineer')).toBeInTheDocument()
+    })
+    expect(
+      screen.queryByText('Dismissed React TypeScript Frontend Remote Role')
+    ).not.toBeInTheDocument()
+  })
+
   it('counts a job scraped within the last 24h', async () => {
     await supabase.from('jobs').insert({
       title: 'Fresh Role',
