@@ -1,0 +1,28 @@
+[
+  {
+    "title": "[Remoto] Product Owner na BotCity",
+    "html_url": "https://github.com/frontendbr/vagas/issues/8511",
+    "body": "Vaga de PO totalmente remota."
+  },
+  {
+    "title": "[100% Remoto] Full-Stack Sênior - Igma",
+    "html_url": "https://github.com/backend-br/vagas/issues/12293",
+    "body": null
+  },
+  {
+    "title": "[Remoto] Vaga sem empresa clara",
+    "html_url": "https://github.com/frontendbr/vagas/issues/8400",
+    "body": "Descrição qualquer."
+  },
+  {
+    "title": "[Remoto] PR que não é vaga na Foo",
+    "html_url": "https://github.com/frontendbr/vagas/pull/8399",
+    "body": "ignore me",
+    "pull_request": { "url": "https://api.github.com/..." }
+  },
+  {
+    "title": "[Remoto] Fullstack (React) | Sênior na Sensedia",
+    "html_url": "https://github.com/frontendbr/vagas/issues/8478",
+    "body": ""
+  }
+]
