@@ -63,11 +63,16 @@ Duas funções — impura (rede) e pura (parse):
 
 - Deriva `owner/repo` do path da URL (`github.com/frontendbr/vagas` → `frontendbr/vagas`).
 - Loop de páginas:
-  `https://api.github.com/repos/{owner}/{repo}/issues?state=open&labels=Remoto&per_page=100&page=N`
+  `https://api.github.com/repos/{owner}/{repo}/issues?state=open&labels=Remoto&sort=created&direction=desc&per_page=100&page=N`
 - Headers: `Accept: application/vnd.github+json`, `User-Agent: remote-radar-scraper`,
   e `Authorization: Bearer ${GITHUB_TOKEN}` **se** `process.env.GITHUB_TOKEN` existir.
-- Para quando uma página retorna `< 100` itens (última página).
-- Concatena os arrays e retorna `JSON.stringify(allIssues)`.
+- **Janela de recência:** só mantém issues com `created_at` nos últimos **60 dias**
+  (corte = `Date.now() - 60d`). Como a API vem ordenada por `created` desc, ao
+  encontrar a primeira issue mais antiga que o corte, **para a paginação** (o resto
+  é mais antigo). Filtro feito por um helper puro `filterRecentIssues(issues, cutoffIso)`
+  (testável), mantendo `parseGithubIssues` puro e sem noção de tempo.
+- Para também quando uma página retorna `< 100` itens (última página).
+- Concatena os arrays (já filtrados por recência) e retorna `JSON.stringify(keptIssues)`.
 - Lança erro se `status >= 400` (cai no tratamento de erro por-fonte do pipeline).
 
 **`parseGithubIssues(json): RawJob[]`** (pura)
@@ -119,6 +124,8 @@ httpGet: async (url, headers) => {
   `pull_request`, uma sem empresa parseável, uma com body vazio). Verifica
   extração título/empresa, skip de PR, `location='Remoto'`, body→description.
   **(critério de aceite)**
+- **`scraper/adapters/github.spec.ts`** — `filterRecentIssues` mantém issues dentro do
+  corte e descarta as anteriores (corte determinístico via `cutoffIso` fixo).
 - **`scraper/adapters/index.spec.ts`** — `resolveAdapter` para URLs github.com → github.
 - **`scraper/pipeline.spec.ts`** — caso com adapter que define `fetch`: usa `httpGet`
   mockado (não `renderPage`) e produz linhas.
@@ -134,3 +141,5 @@ httpGet: async (url, headers) => {
 - Cadastro/ativação das fontes em `scraping_sources` (já existem como ativas no run #17).
 - Filtros de modalidade além de `Remoto` (ex.: `Exterior`/`Híbrido`).
 - Paralelismo/timeout do pipeline (issue #27).
+- Aplicar a janela de recência (60 dias) aos **demais adapters** (boards HTML) —
+  tratado em issue própria; aqui só o adapter de GitHub Issues a implementa.

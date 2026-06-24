@@ -269,21 +269,58 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 
 - Consumes: `FetchContext` de `./types.ts`; `parseGithubIssues` da Task 1.
 - Produces:
-  - `fetchGithubIssues(sourceUrl: string, httpGet: FetchContext['httpGet']): Promise<string>`
+  - `filterRecentIssues<T extends { created_at?: string }>(issues: T[], cutoffIso: string): { kept: T[]; reachedCutoff: boolean }`
+  - `fetchGithubIssues(sourceUrl: string, httpGet: FetchContext['httpGet'], now?: Date): Promise<string>`
   - `github: Adapter` (com `host: 'github.com'`, `fetch`, `parse`).
+
+**Janela de recência:** só ingerir vagas publicadas (`created_at`) nos últimos
+**60 dias**. A API é ordenada por `created` desc, então paramos a paginação ao
+bater na primeira issue anterior ao corte. O filtro vive num helper **puro**
+(`filterRecentIssues`) para manter `parseGithubIssues` sem noção de tempo. Datas
+ISO 8601 UTC (`2026-...Z`) comparam-se lexicograficamente, então `created_at >= cutoffIso`
+basta. O parâmetro `now` (default `new Date()`) torna o corte testável.
 
 - [ ] **Step 1: Escrever testes que falham (append em `scraper/adapters/github.spec.ts`)**
 
 Adicionar o import e os blocos:
 
 ```ts
-import { fetchGithubIssues, github } from './github.ts'
+import { fetchGithubIssues, filterRecentIssues, github } from './github.ts'
+
+describe('filterRecentIssues', () => {
+  const cutoff = '2026-05-01T00:00:00.000Z'
+
+  it('keeps issues created on/after the cutoff and drops older ones', () => {
+    const { kept, reachedCutoff } = filterRecentIssues(
+      [
+        { id: 1, created_at: '2026-06-10T00:00:00Z' },
+        { id: 2, created_at: '2026-04-01T00:00:00Z' },
+      ],
+      cutoff
+    )
+    expect(kept.map((i) => i.id)).toEqual([1])
+    expect(reachedCutoff).toBe(true)
+  })
+
+  it('reports reachedCutoff false when all issues are recent', () => {
+    const { kept, reachedCutoff } = filterRecentIssues(
+      [{ id: 1, created_at: '2026-06-10T00:00:00Z' }],
+      cutoff
+    )
+    expect(kept).toHaveLength(1)
+    expect(reachedCutoff).toBe(false)
+  })
+})
 
 describe('fetchGithubIssues', () => {
-  it('derives owner/repo, paginates, and concatenates issues', async () => {
+  const recent = () => new Date().toISOString()
+
+  it('derives owner/repo, paginates, and concatenates recent issues', async () => {
     const pages: Record<string, string> = {
-      'page=1': JSON.stringify(Array.from({ length: 100 }, (_, i) => ({ id: i }))),
-      'page=2': JSON.stringify([{ id: 100 }]),
+      'page=1': JSON.stringify(
+        Array.from({ length: 100 }, (_, i) => ({ id: i, created_at: recent() }))
+      ),
+      'page=2': JSON.stringify([{ id: 100, created_at: recent() }]),
     }
     const calls: string[] = []
     const httpGet = async (url: string) => {
@@ -292,11 +329,29 @@ describe('fetchGithubIssues', () => {
       return { status: 200, body: pages[key] }
     }
     const result = await fetchGithubIssues('https://github.com/frontendbr/vagas', httpGet)
-    const arr = JSON.parse(result)
-    expect(arr).toHaveLength(101)
+    expect(JSON.parse(result)).toHaveLength(101)
     expect(calls[0]).toContain('/repos/frontendbr/vagas/issues')
     expect(calls[0]).toContain('labels=Remoto')
+    expect(calls[0]).toContain('sort=created')
     expect(calls).toHaveLength(2)
+  })
+
+  it('drops issues older than the recency window and stops paginating early', async () => {
+    const calls: string[] = []
+    const httpGet = async (url: string) => {
+      calls.push(url)
+      return {
+        status: 200,
+        body: JSON.stringify([
+          { id: 1, created_at: new Date().toISOString() },
+          { id: 2, created_at: '2000-01-01T00:00:00Z' },
+        ]),
+      }
+    }
+    const result = await fetchGithubIssues('https://github.com/frontendbr/vagas', httpGet)
+    const arr = JSON.parse(result) as { id: number }[]
+    expect(arr.map((i) => i.id)).toEqual([1])
+    expect(calls).toHaveLength(1) // parou após a primeira página (bateu no corte)
   })
 
   it('throws on HTTP error status', async () => {
@@ -317,9 +372,9 @@ describe('fetchGithubIssues', () => {
 - [ ] **Step 2: Rodar e confirmar falha**
 
 Run: `npx vitest run scraper/adapters/github.spec.ts`
-Expected: FAIL — `fetchGithubIssues` / `github` não exportados.
+Expected: FAIL — `fetchGithubIssues` / `filterRecentIssues` / `github` não exportados.
 
-- [ ] **Step 3: Implementar fetch + adapter (append em `scraper/adapters/github.ts`)**
+- [ ] **Step 3: Implementar fetch + filtro + adapter (append em `scraper/adapters/github.ts`)**
 
 Trocar o import topo do arquivo para incluir `FetchContext`:
 
@@ -331,6 +386,7 @@ Adicionar ao final do arquivo:
 
 ```ts
 const PER_PAGE = 100
+const RECENCY_DAYS = 60
 
 const repoFromUrl = (sourceUrl: string): string => {
   const parts = new URL(sourceUrl).pathname.split('/').filter(Boolean)
@@ -338,9 +394,26 @@ const repoFromUrl = (sourceUrl: string): string => {
   return `${parts[0]}/${parts[1]}`
 }
 
+export const filterRecentIssues = <T extends { created_at?: string }>(
+  issues: T[],
+  cutoffIso: string
+): { kept: T[]; reachedCutoff: boolean } => {
+  const kept: T[] = []
+  let reachedCutoff = false
+  for (const issue of issues) {
+    if (issue.created_at && issue.created_at >= cutoffIso) {
+      kept.push(issue)
+    } else {
+      reachedCutoff = true
+    }
+  }
+  return { kept, reachedCutoff }
+}
+
 export const fetchGithubIssues = async (
   sourceUrl: string,
-  httpGet: FetchContext['httpGet']
+  httpGet: FetchContext['httpGet'],
+  now: Date = new Date()
 ): Promise<string> => {
   const repo = repoFromUrl(sourceUrl)
   const headers: Record<string, string> = {
@@ -350,18 +423,23 @@ export const fetchGithubIssues = async (
   if (process.env.GITHUB_TOKEN) {
     headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`
   }
+  const cutoffIso = new Date(now.getTime() - RECENCY_DAYS * 24 * 60 * 60 * 1000).toISOString()
 
   const all: unknown[] = []
   for (let page = 1; ; page += 1) {
-    const url = `https://api.github.com/repos/${repo}/issues?state=open&labels=Remoto&per_page=${PER_PAGE}&page=${page}`
+    const url = `https://api.github.com/repos/${repo}/issues?state=open&labels=Remoto&sort=created&direction=desc&per_page=${PER_PAGE}&page=${page}`
     const { status, body } = await httpGet(url, headers)
     if (status >= 400) {
       throw new Error(`GitHub API ${status} for ${repo} page ${page}`)
     }
     const parsed = JSON.parse(body) as unknown
     if (!Array.isArray(parsed) || parsed.length === 0) break
-    all.push(...parsed)
-    if (parsed.length < PER_PAGE) break
+    const { kept, reachedCutoff } = filterRecentIssues(
+      parsed as { created_at?: string }[],
+      cutoffIso
+    )
+    all.push(...kept)
+    if (reachedCutoff || parsed.length < PER_PAGE) break
   }
   return JSON.stringify(all)
 }
@@ -376,7 +454,7 @@ export const github: Adapter = {
 - [ ] **Step 4: Rodar e confirmar passa**
 
 Run: `npx vitest run scraper/adapters/github.spec.ts`
-Expected: PASS (10 testes).
+Expected: PASS (13 testes).
 
 - [ ] **Step 5: Registrar o adapter em `scraper/adapters/index.ts`**
 
