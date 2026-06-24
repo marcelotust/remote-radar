@@ -1,5 +1,6 @@
 import { JSDOM } from 'jsdom'
 import type { Adapter, RawJob } from './types.ts'
+import { toIsoOrNull } from './dom.ts'
 
 type Obj = Record<string, unknown>
 
@@ -53,9 +54,7 @@ export const parseJsonLd = (html: string): RawJob[] => {
     const url = asString(p['url'])
     if (!title || !company || !url) continue
     const datePosted = asString(p['datePosted'])
-    const parsedDate = datePosted ? new Date(datePosted) : null
-    const published_at =
-      parsedDate && !Number.isNaN(parsedDate.getTime()) ? parsedDate.toISOString() : null
+    const published_at = toIsoOrNull(datePosted)
     jobs.push({
       title,
       company,

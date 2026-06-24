@@ -1,7 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { runScrape, type PipelineDeps } from './pipeline.ts'
-import type { Adapter } from './adapters/types.ts'
-import type { RawJob } from './adapters/types.ts'
+import type { Adapter, RawJob } from './adapters/types.ts'
 
 const datedAdapter = (jobs: RawJob[]): Adapter => ({
   host: 'x',

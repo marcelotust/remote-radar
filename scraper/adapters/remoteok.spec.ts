@@ -33,4 +33,14 @@ describe('remoteok adapter', () => {
     expect(jobs[0].published_at).toBe('2026-06-10T12:30:00.000Z')
     expect(jobs[1].published_at).toBeNull()
   })
+
+  it('does not throw and yields published_at: null for a present-but-garbage date', () => {
+    const html = `<pre>${JSON.stringify([
+      { position: 'Dev', company: 'Acme', url: 'https://acme.com/1', date: 'soon' },
+    ])}</pre>`
+    expect(() => parseRemoteOk(html)).not.toThrow()
+    const jobs = parseRemoteOk(html)
+    expect(jobs).toHaveLength(1)
+    expect(jobs[0].published_at).toBeNull()
+  })
 })

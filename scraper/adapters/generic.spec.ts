@@ -13,7 +13,7 @@ const html = readFileSync(
 describe('parseJsonLd', () => {
   it('extracts JobPosting entries and ignores non-jobs', () => {
     const jobs = parseJsonLd(html)
-    expect(jobs).toHaveLength(1)
+    expect(jobs).toHaveLength(2)
     expect(jobs[0]).toEqual({
       title: 'Senior Frontend Engineer',
       company: 'Acme Inc',
@@ -21,6 +21,11 @@ describe('parseJsonLd', () => {
       location: 'Remote, BR',
       description: 'Build React and TypeScript apps. Remote friendly.',
       published_at: '2026-06-12T00:00:00.000Z',
+    })
+    expect(jobs[1]).toMatchObject({
+      title: 'Backend Engineer',
+      company: 'Beta Corp',
+      url: 'https://example.com/jobs/backend',
     })
   })
 
@@ -31,5 +36,7 @@ describe('parseJsonLd', () => {
   it('extracts datePosted as published_at, null when absent', () => {
     const jobs = parseJsonLd(html)
     expect(jobs.some((j) => j.published_at === '2026-06-12T00:00:00.000Z')).toBe(true)
+    const dateless = jobs.find((j) => j.title === 'Backend Engineer')
+    expect(dateless?.published_at).toBeNull()
   })
 })

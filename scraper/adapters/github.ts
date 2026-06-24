@@ -1,5 +1,6 @@
 import type { Adapter, FetchContext, RawJob } from './types.ts'
 import { RECENCY_DAYS } from '../recency.ts'
+import { toIsoOrNull } from './dom.ts'
 
 interface GithubIssue {
   title?: string
@@ -58,7 +59,7 @@ export const parseGithubIssues = (json: string): RawJob[] => {
       url,
       location: 'Remoto',
       description: body ? body.slice(0, DESCRIPTION_MAX) : null,
-      published_at: item.created_at ? new Date(item.created_at).toISOString() : null,
+      published_at: toIsoOrNull(item.created_at),
     })
   }
   return jobs

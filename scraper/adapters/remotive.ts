@@ -1,5 +1,6 @@
 import { JSDOM } from 'jsdom'
 import type { Adapter, RawJob } from './types.ts'
+import { toIsoOrNull } from './dom.ts'
 
 interface RemotiveJob {
   title?: string
@@ -32,7 +33,7 @@ export const parseRemotive = (html: string): RawJob[] => {
       url,
       location: j.candidate_required_location?.trim() || null,
       description: j.description?.trim() || null,
-      published_at: j.publication_date ? new Date(j.publication_date).toISOString() : null,
+      published_at: toIsoOrNull(j.publication_date),
     })
   }
   return jobs
