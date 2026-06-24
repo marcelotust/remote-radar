@@ -1,6 +1,7 @@
 import type { Adapter, RawJob, FetchContext } from './adapters/types.ts'
 import type { JobRow, SourceRow, SourceRunResult } from './db.ts'
 import type { RelevanceLevel } from '../src/types/index.ts'
+import { recencyCutoffIso, isRecent } from './recency.ts'
 
 export interface PipelineDeps {
   fetchActiveSources: () => Promise<SourceRow[]>
@@ -24,6 +25,7 @@ const truncate = (s: string, max: number): string => (s.length > max ? s.slice(0
 
 export const runScrape = async (deps: PipelineDeps): Promise<ScrapeSummary> => {
   const sources = await deps.fetchActiveSources()
+  const cutoff = recencyCutoffIso()
   const perSource: SourceRunResult[] = []
   let extracted = 0
   let inserted = 0
@@ -41,10 +43,22 @@ export const runScrape = async (deps: PipelineDeps): Promise<ScrapeSummary> => {
       } else {
         throw new Error(`adapter for ${source.url} defines neither fetch nor readySelector`)
       }
-      const rows: JobRow[] = adapter.parse(content).map((raw) => {
-        const { relevance_score, relevance_level } = deps.scoreJob(raw)
-        return { ...raw, source_url: source.url, relevance_score, relevance_level }
-      })
+      const rows: JobRow[] = adapter
+        .parse(content)
+        .filter((raw) => isRecent(raw.published_at, cutoff))
+        .map((raw) => {
+          const { relevance_score, relevance_level } = deps.scoreJob(raw)
+          return {
+            title: raw.title,
+            company: raw.company,
+            url: raw.url,
+            location: raw.location,
+            description: raw.description,
+            source_url: source.url,
+            relevance_score,
+            relevance_level,
+          }
+        })
       extracted += rows.length
       const { count } = await deps.upsertJobs(rows)
       inserted += count
