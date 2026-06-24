@@ -79,9 +79,10 @@ export const filterRecentIssues = <T extends { created_at?: string }>(
   for (const issue of issues) {
     if (issue.created_at && issue.created_at >= cutoffIso) {
       kept.push(issue)
-    } else {
+    } else if (issue.created_at) {
       reachedCutoff = true
     }
+    // missing created_at: dropped, no cutoff signal
   }
   return { kept, reachedCutoff }
 }

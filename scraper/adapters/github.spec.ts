@@ -90,17 +90,31 @@ describe('filterRecentIssues', () => {
     expect(kept).toHaveLength(1)
     expect(reachedCutoff).toBe(false)
   })
+
+  it('drops issues missing created_at without setting reachedCutoff', () => {
+    const { kept, reachedCutoff } = filterRecentIssues(
+      [
+        { id: 1, created_at: '2026-06-10T00:00:00Z' },
+        { id: 2 }, // missing created_at
+        { id: 3, created_at: '2026-06-05T00:00:00Z' },
+      ],
+      cutoff
+    )
+    expect(kept.map((i) => i.id)).toEqual([1, 3])
+    expect(reachedCutoff).toBe(false)
+  })
 })
 
 describe('fetchGithubIssues', () => {
-  const recent = () => new Date().toISOString()
+  const now = new Date('2026-06-24T00:00:00.000Z')
 
   it('derives owner/repo, paginates, and concatenates recent issues', async () => {
+    const recentIso = now.toISOString()
     const pages: Record<string, string> = {
       'page=1': JSON.stringify(
-        Array.from({ length: 100 }, (_, i) => ({ id: i, created_at: recent() }))
+        Array.from({ length: 100 }, (_, i) => ({ id: i, created_at: recentIso }))
       ),
-      'page=2': JSON.stringify([{ id: 100, created_at: recent() }]),
+      'page=2': JSON.stringify([{ id: 100, created_at: recentIso }]),
     }
     const calls: string[] = []
     const httpGet = async (url: string) => {
@@ -108,7 +122,7 @@ describe('fetchGithubIssues', () => {
       const key = url.includes('page=2') ? 'page=2' : 'page=1'
       return { status: 200, body: pages[key] }
     }
-    const result = await fetchGithubIssues('https://github.com/frontendbr/vagas', httpGet)
+    const result = await fetchGithubIssues('https://github.com/frontendbr/vagas', httpGet, now)
     expect(JSON.parse(result)).toHaveLength(101)
     expect(calls[0]).toContain('/repos/frontendbr/vagas/issues')
     expect(calls[0]).toContain('labels=Remoto')
@@ -123,15 +137,24 @@ describe('fetchGithubIssues', () => {
       return {
         status: 200,
         body: JSON.stringify([
-          { id: 1, created_at: new Date().toISOString() },
+          { id: 1, created_at: now.toISOString() },
           { id: 2, created_at: '2000-01-01T00:00:00Z' },
         ]),
       }
     }
-    const result = await fetchGithubIssues('https://github.com/frontendbr/vagas', httpGet)
+    const result = await fetchGithubIssues('https://github.com/frontendbr/vagas', httpGet, now)
     const arr = JSON.parse(result) as { id: number }[]
     expect(arr.map((i) => i.id)).toEqual([1])
     expect(calls).toHaveLength(1) // parou após a primeira página (bateu no corte)
+  })
+
+  it('throws when repoFromUrl cannot derive owner/repo from URL', async () => {
+    const httpGet = async () => {
+      throw new Error('should not be called')
+    }
+    await expect(fetchGithubIssues('https://github.com/onlyone', httpGet)).rejects.toThrow(
+      /cannot derive owner\/repo/
+    )
   })
 
   it('throws on HTTP error status', async () => {
