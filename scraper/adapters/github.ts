@@ -1,4 +1,5 @@
 import type { Adapter, FetchContext, RawJob } from './types.ts'
+import { RECENCY_DAYS } from '../recency.ts'
 
 interface GithubIssue {
   title?: string
@@ -62,7 +63,6 @@ export const parseGithubIssues = (json: string): RawJob[] => {
 }
 
 const PER_PAGE = 100
-const RECENCY_DAYS = 60
 
 const repoFromUrl = (sourceUrl: string): string => {
   const parts = new URL(sourceUrl).pathname.split('/').filter(Boolean)
