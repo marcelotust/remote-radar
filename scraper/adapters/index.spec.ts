@@ -8,8 +8,15 @@ describe('resolveAdapter', () => {
     )
   })
 
+  it('resolves the newly registered board hosts', () => {
+    expect(resolveAdapter('https://remotive.com/api/remote-jobs').host).toBe('remotive.com')
+    expect(resolveAdapter('https://remoteok.com/api').host).toBe('remoteok.com')
+    expect(resolveAdapter('https://euremotejobs.com/jobs/').host).toBe('euremotejobs.com')
+    expect(resolveAdapter('https://www.workingnomads.com/jobs').host).toBe('workingnomads.com')
+  })
+
   it('falls back to the generic adapter for unknown hosts', () => {
-    expect(resolveAdapter('https://remoteok.com').host).toBe('*')
+    expect(resolveAdapter('https://example.com').host).toBe('*')
   })
 
   it('falls back to generic for invalid URLs', () => {
