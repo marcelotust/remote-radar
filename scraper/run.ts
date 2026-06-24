@@ -15,6 +15,10 @@ const main = async (): Promise<void> => {
       fetchActiveSources: () => fetchActiveSources(client),
       resolveAdapter,
       renderPage: (url, readySelector) => renderPage(browser, url, readySelector),
+      httpGet: async (url, headers) => {
+        const res = await fetch(url, { headers })
+        return { status: res.status, body: await res.text() }
+      },
       scoreJob,
       upsertJobs: (jobs) => upsertJobs(client, jobs),
       recordSourceRun: (result) => recordSourceRun(client, result),
