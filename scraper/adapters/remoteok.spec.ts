@@ -1,0 +1,29 @@
+// @vitest-environment node
+import { describe, it, expect } from 'vitest'
+import { readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
+import { remoteok } from './remoteok.ts'
+
+const html = readFileSync(
+  fileURLToPath(new URL('./__fixtures__/remoteok.html', import.meta.url)),
+  'utf8'
+)
+
+describe('remoteok adapter', () => {
+  it('targets the right host', () => {
+    expect(remoteok.host).toBe('remoteok.com')
+  })
+
+  it('parses the JSON array and skips the leading legal notice', () => {
+    const jobs = remoteok.parse(html)
+    expect(jobs).toHaveLength(2)
+    expect(jobs[0]).toEqual({
+      title: 'Freelance Website Copywriter Content Strategist',
+      company: 'N4 Studio',
+      url: 'https://remoteOK.com/remote-jobs/remote-freelance-website-copywriter-content-strategist-n4-studior-1133968',
+      location: 'Sydney, Sydney, New South Wales, Australia',
+      description: 'Write copy.',
+    })
+    expect(jobs[1].company).toBe('24-MAG')
+  })
+})
