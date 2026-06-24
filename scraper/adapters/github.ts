@@ -1,4 +1,4 @@
-import type { RawJob } from './types.ts'
+import type { Adapter, FetchContext, RawJob } from './types.ts'
 
 interface GithubIssue {
   title?: string
@@ -59,4 +59,69 @@ export const parseGithubIssues = (json: string): RawJob[] => {
     })
   }
   return jobs
+}
+
+const PER_PAGE = 100
+const RECENCY_DAYS = 60
+
+const repoFromUrl = (sourceUrl: string): string => {
+  const parts = new URL(sourceUrl).pathname.split('/').filter(Boolean)
+  if (parts.length < 2) throw new Error(`cannot derive owner/repo from ${sourceUrl}`)
+  return `${parts[0]}/${parts[1]}`
+}
+
+export const filterRecentIssues = <T extends { created_at?: string }>(
+  issues: T[],
+  cutoffIso: string
+): { kept: T[]; reachedCutoff: boolean } => {
+  const kept: T[] = []
+  let reachedCutoff = false
+  for (const issue of issues) {
+    if (issue.created_at && issue.created_at >= cutoffIso) {
+      kept.push(issue)
+    } else {
+      reachedCutoff = true
+    }
+  }
+  return { kept, reachedCutoff }
+}
+
+export const fetchGithubIssues = async (
+  sourceUrl: string,
+  httpGet: FetchContext['httpGet'],
+  now: Date = new Date()
+): Promise<string> => {
+  const repo = repoFromUrl(sourceUrl)
+  const headers: Record<string, string> = {
+    Accept: 'application/vnd.github+json',
+    'User-Agent': 'remote-radar-scraper',
+  }
+  if (process.env.GITHUB_TOKEN) {
+    headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`
+  }
+  const cutoffIso = new Date(now.getTime() - RECENCY_DAYS * 24 * 60 * 60 * 1000).toISOString()
+
+  const all: unknown[] = []
+  for (let page = 1; ; page += 1) {
+    const url = `https://api.github.com/repos/${repo}/issues?state=open&labels=Remoto&sort=created&direction=desc&per_page=${PER_PAGE}&page=${page}`
+    const { status, body } = await httpGet(url, headers)
+    if (status >= 400) {
+      throw new Error(`GitHub API ${status} for ${repo} page ${page}`)
+    }
+    const parsed = JSON.parse(body) as unknown
+    if (!Array.isArray(parsed) || parsed.length === 0) break
+    const { kept, reachedCutoff } = filterRecentIssues(
+      parsed as { created_at?: string }[],
+      cutoffIso
+    )
+    all.push(...kept)
+    if (reachedCutoff || parsed.length < PER_PAGE) break
+  }
+  return JSON.stringify(all)
+}
+
+export const github: Adapter = {
+  host: 'github.com',
+  fetch: (url, ctx) => fetchGithubIssues(url, ctx.httpGet),
+  parse: parseGithubIssues,
 }

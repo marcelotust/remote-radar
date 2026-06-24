@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { resolveAdapter } from './index.ts'
+import { github } from './github.ts'
 
 describe('resolveAdapter', () => {
   it('matches a known host (ignoring www.)', () => {
@@ -21,5 +22,10 @@ describe('resolveAdapter', () => {
 
   it('falls back to generic for invalid URLs', () => {
     expect(resolveAdapter('not a url').host).toBe('*')
+  })
+
+  it('resolves github.com sources to the github adapter', () => {
+    expect(resolveAdapter('https://github.com/frontendbr/vagas')).toBe(github)
+    expect(resolveAdapter('https://github.com/backend-br/vagas')).toBe(github)
   })
 })

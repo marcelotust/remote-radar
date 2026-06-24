@@ -64,3 +64,86 @@ describe('parseGithubIssues', () => {
     expect(parseGithubIssues('{}')).toEqual([])
   })
 })
+
+import { fetchGithubIssues, filterRecentIssues, github } from './github.ts'
+
+describe('filterRecentIssues', () => {
+  const cutoff = '2026-05-01T00:00:00.000Z'
+
+  it('keeps issues created on/after the cutoff and drops older ones', () => {
+    const { kept, reachedCutoff } = filterRecentIssues(
+      [
+        { id: 1, created_at: '2026-06-10T00:00:00Z' },
+        { id: 2, created_at: '2026-04-01T00:00:00Z' },
+      ],
+      cutoff
+    )
+    expect(kept.map((i) => i.id)).toEqual([1])
+    expect(reachedCutoff).toBe(true)
+  })
+
+  it('reports reachedCutoff false when all issues are recent', () => {
+    const { kept, reachedCutoff } = filterRecentIssues(
+      [{ id: 1, created_at: '2026-06-10T00:00:00Z' }],
+      cutoff
+    )
+    expect(kept).toHaveLength(1)
+    expect(reachedCutoff).toBe(false)
+  })
+})
+
+describe('fetchGithubIssues', () => {
+  const recent = () => new Date().toISOString()
+
+  it('derives owner/repo, paginates, and concatenates recent issues', async () => {
+    const pages: Record<string, string> = {
+      'page=1': JSON.stringify(
+        Array.from({ length: 100 }, (_, i) => ({ id: i, created_at: recent() }))
+      ),
+      'page=2': JSON.stringify([{ id: 100, created_at: recent() }]),
+    }
+    const calls: string[] = []
+    const httpGet = async (url: string) => {
+      calls.push(url)
+      const key = url.includes('page=2') ? 'page=2' : 'page=1'
+      return { status: 200, body: pages[key] }
+    }
+    const result = await fetchGithubIssues('https://github.com/frontendbr/vagas', httpGet)
+    expect(JSON.parse(result)).toHaveLength(101)
+    expect(calls[0]).toContain('/repos/frontendbr/vagas/issues')
+    expect(calls[0]).toContain('labels=Remoto')
+    expect(calls[0]).toContain('sort=created')
+    expect(calls).toHaveLength(2)
+  })
+
+  it('drops issues older than the recency window and stops paginating early', async () => {
+    const calls: string[] = []
+    const httpGet = async (url: string) => {
+      calls.push(url)
+      return {
+        status: 200,
+        body: JSON.stringify([
+          { id: 1, created_at: new Date().toISOString() },
+          { id: 2, created_at: '2000-01-01T00:00:00Z' },
+        ]),
+      }
+    }
+    const result = await fetchGithubIssues('https://github.com/frontendbr/vagas', httpGet)
+    const arr = JSON.parse(result) as { id: number }[]
+    expect(arr.map((i) => i.id)).toEqual([1])
+    expect(calls).toHaveLength(1) // parou após a primeira página (bateu no corte)
+  })
+
+  it('throws on HTTP error status', async () => {
+    const httpGet = async () => ({ status: 403, body: 'rate limited' })
+    await expect(fetchGithubIssues('https://github.com/backend-br/vagas', httpGet)).rejects.toThrow(
+      /403/
+    )
+  })
+
+  it('exposes a github adapter with fetch + parse for host github.com', () => {
+    expect(github.host).toBe('github.com')
+    expect(typeof github.fetch).toBe('function')
+    expect(typeof github.parse).toBe('function')
+  })
+})
