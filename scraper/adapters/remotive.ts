@@ -7,6 +7,7 @@ interface RemotiveJob {
   url?: string
   candidate_required_location?: string
   description?: string
+  publication_date?: string
 }
 
 export const parseRemotive = (html: string): RawJob[] => {
@@ -31,6 +32,7 @@ export const parseRemotive = (html: string): RawJob[] => {
       url,
       location: j.candidate_required_location?.trim() || null,
       description: j.description?.trim() || null,
+      published_at: j.publication_date ? new Date(j.publication_date).toISOString() : null,
     })
   }
   return jobs

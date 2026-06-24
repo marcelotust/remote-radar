@@ -20,10 +20,16 @@ describe('parseJsonLd', () => {
       url: 'https://example.com/jobs/frontend',
       location: 'Remote, BR',
       description: 'Build React and TypeScript apps. Remote friendly.',
+      published_at: '2026-06-12T00:00:00.000Z',
     })
   })
 
   it('returns [] when there is no JSON-LD', () => {
     expect(parseJsonLd('<html><body>nothing</body></html>')).toEqual([])
+  })
+
+  it('extracts datePosted as published_at, null when absent', () => {
+    const jobs = parseJsonLd(html)
+    expect(jobs.some((j) => j.published_at === '2026-06-12T00:00:00.000Z')).toBe(true)
   })
 })

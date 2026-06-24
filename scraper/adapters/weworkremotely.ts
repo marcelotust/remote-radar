@@ -1,6 +1,6 @@
 import { JSDOM } from 'jsdom'
 import type { Adapter, RawJob } from './types.ts'
-import { text } from './dom.ts'
+import { text, dateTime } from './dom.ts'
 
 const BASE = 'https://weworkremotely.com'
 
@@ -19,6 +19,8 @@ export const parseWeWorkRemotely = (html: string): RawJob[] => {
       url: `${BASE}${href}`,
       location: text(a.querySelector('.new-listing__company-headquarters')),
       description: null,
+      // Boards without a machine-readable <time datetime> yield null → ingested anyway (#56).
+      published_at: dateTime(a),
     })
   }
   return jobs

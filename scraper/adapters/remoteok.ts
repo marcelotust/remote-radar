@@ -7,6 +7,7 @@ interface RemoteOkJob {
   url?: string
   location?: string
   description?: string
+  date?: string
 }
 
 export const parseRemoteOk = (html: string): RawJob[] => {
@@ -32,6 +33,7 @@ export const parseRemoteOk = (html: string): RawJob[] => {
       url,
       location: item.location?.trim() || null,
       description: item.description?.trim() || null,
+      published_at: item.date ? new Date(item.date).toISOString() : null,
     })
   }
   return jobs

@@ -49,8 +49,14 @@ describe('parseGithubIssues', () => {
       url: 'https://github.com/frontendbr/vagas/issues/8511',
       location: 'Remoto',
       description: 'Vaga de PO totalmente remota.',
+      published_at: '2026-06-20T00:00:00.000Z',
     })
     expect(jobs.map((j) => j.url)).not.toContain('https://github.com/frontendbr/vagas/pull/8399')
+  })
+
+  it('sets published_at to null when an issue has no created_at', () => {
+    const jobs = parseGithubIssues(json)
+    expect(jobs[1].published_at).toBeNull()
   })
 
   it('maps null/empty body to null description', () => {

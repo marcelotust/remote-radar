@@ -52,12 +52,17 @@ export const parseJsonLd = (html: string): RawJob[] => {
     const company = org && typeof org === 'object' ? asString((org as Obj)['name']) : null
     const url = asString(p['url'])
     if (!title || !company || !url) continue
+    const datePosted = asString(p['datePosted'])
+    const parsedDate = datePosted ? new Date(datePosted) : null
+    const published_at =
+      parsedDate && !Number.isNaN(parsedDate.getTime()) ? parsedDate.toISOString() : null
     jobs.push({
       title,
       company,
       url,
       location: locationOf(p),
       description: asString(p['description']),
+      published_at,
     })
   }
   return jobs

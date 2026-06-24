@@ -1,6 +1,6 @@
 import { JSDOM } from 'jsdom'
 import type { Adapter, RawJob } from './types.ts'
-import { text } from './dom.ts'
+import { text, dateTime } from './dom.ts'
 
 const BASE = 'https://www.workingnomads.com'
 
@@ -19,6 +19,8 @@ export const parseWorkingNomads = (html: string): RawJob[] => {
       url: `${BASE}${href}`,
       location: null,
       description: null,
+      // Boards without a machine-readable <time datetime> yield null → ingested anyway (#56).
+      published_at: dateTime(a),
     })
   }
   return jobs

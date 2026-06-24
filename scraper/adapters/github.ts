@@ -6,6 +6,7 @@ interface GithubIssue {
   html_url?: string
   body?: string | null
   pull_request?: unknown
+  created_at?: string
 }
 
 const NA = ' na '
@@ -57,6 +58,7 @@ export const parseGithubIssues = (json: string): RawJob[] => {
       url,
       location: 'Remoto',
       description: body ? body.slice(0, DESCRIPTION_MAX) : null,
+      published_at: item.created_at ? new Date(item.created_at).toISOString() : null,
     })
   }
   return jobs

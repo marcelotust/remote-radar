@@ -12,6 +12,7 @@ const adapter = (jobs: { title: string; url: string }[]): Adapter => ({
       url: j.url,
       location: null,
       description: null,
+      published_at: null,
     })),
 })
 
@@ -44,6 +45,7 @@ describe('runScrape', () => {
         url: 'https://a.com/1',
         location: null,
         description: null,
+        published_at: null,
         source_url: 'https://a.com',
         relevance_score: 2,
         relevance_level: 'medium',
@@ -121,7 +123,14 @@ describe('runScrape', () => {
       body,
     }))
     const parse = vi.fn(() => [
-      { title: 'Dev', company: 'C', url: 'https://x/1', location: 'Remoto', description: null },
+      {
+        title: 'Dev',
+        company: 'C',
+        url: 'https://x/1',
+        location: 'Remoto',
+        description: null,
+        published_at: null,
+      },
     ])
     const fetchAdapter: Adapter = {
       host: 'api',

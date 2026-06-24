@@ -1,6 +1,6 @@
 import { JSDOM } from 'jsdom'
 import type { Adapter, RawJob } from './types.ts'
-import { text } from './dom.ts'
+import { text, dateTime } from './dom.ts'
 
 export const parseEuRemoteJobs = (html: string): RawJob[] => {
   const { document } = new JSDOM(html).window
@@ -17,6 +17,8 @@ export const parseEuRemoteJobs = (html: string): RawJob[] => {
       url,
       location: text(a.querySelector('.meta-location')),
       description: null,
+      // Boards without a machine-readable <time datetime> yield null → ingested anyway (#56).
+      published_at: dateTime(a),
     })
   }
   return jobs
