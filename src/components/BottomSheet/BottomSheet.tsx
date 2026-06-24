@@ -41,6 +41,10 @@ export const BottomSheet = ({ open, onClose, children }: Props) => {
 
   useEffect(() => {
     if (!open) return
+    // The sheet is mobile-only (`lg:hidden`). On lg+ the desktop split-view is
+    // shown instead, so locking body scroll there would freeze the page with no
+    // visible sheet to close. Only lock when the sheet is actually presented.
+    if (window.matchMedia('(min-width: 1024px)').matches) return
     const previous = document.body.style.overflow
     document.body.style.overflow = 'hidden'
     return () => {

@@ -60,4 +60,26 @@ describe('BottomSheet', () => {
     )
     expect(document.body.style.overflow).toBe('')
   })
+
+  it('does not lock body scroll on desktop (lg+) where the sheet is hidden', () => {
+    // On lg+ the sheet is `lg:hidden` and the desktop split-view is used instead.
+    // Locking body scroll there would freeze the page with no visible sheet to close.
+    const spy = vi.spyOn(window, 'matchMedia').mockReturnValue({
+      matches: true,
+      media: '(min-width: 1024px)',
+      onchange: null,
+      addListener: () => {},
+      removeListener: () => {},
+      addEventListener: () => {},
+      removeEventListener: () => {},
+      dispatchEvent: () => false,
+    } as MediaQueryList)
+    render(
+      <BottomSheet open onClose={() => {}}>
+        <p>Detail body</p>
+      </BottomSheet>
+    )
+    expect(document.body.style.overflow).toBe('')
+    spy.mockRestore()
+  })
 })

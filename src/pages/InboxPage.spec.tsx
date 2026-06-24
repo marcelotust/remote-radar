@@ -87,4 +87,16 @@ describe('InboxPage', () => {
       screen.getAllByRole('heading', { name: /senior frontend engineer/i }).length
     ).toBeGreaterThan(0)
   })
+
+  it('keeps the open job visible under the unread-only filter after it is read', async () => {
+    render(<InboxPage />, { wrapper: makeWrapper() })
+    await userEvent.click(screen.getByLabelText(/não lidas/i))
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: /senior frontend engineer/i })).toBeInTheDocument()
+    )
+    // Opening the job marks it read; under the unread-only filter it must NOT
+    // vanish from the list while it is the open job.
+    await userEvent.click(screen.getByRole('button', { name: /senior frontend engineer/i }))
+    expect(screen.getByRole('button', { name: /senior frontend engineer/i })).toBeInTheDocument()
+  })
 })
