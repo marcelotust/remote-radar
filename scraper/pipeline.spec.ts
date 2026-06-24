@@ -115,22 +115,36 @@ describe('runScrape', () => {
 
   it('uses adapter.fetch (not renderPage) when the adapter defines fetch', async () => {
     const renderPage = vi.fn(async () => '<html></html>')
+    const body = JSON.stringify([{ id: 1 }])
     const httpGet = vi.fn(async () => ({
       status: 200,
-      body: JSON.stringify([{ id: 1 }]),
+      body,
     }))
+    const parse = vi.fn(() => [
+      { title: 'Dev', company: 'C', url: 'https://x/1', location: 'Remoto', description: null },
+    ])
     const fetchAdapter: Adapter = {
       host: 'api',
-      fetch: (_url, ctx) => ctx.httpGet('https://api.example/x'),
-      parse: () => [
-        { title: 'Dev', company: 'C', url: 'https://x/1', location: 'Remoto', description: null },
-      ],
+      fetch: async (_url, ctx) => (await ctx.httpGet('https://api.example/x')).body,
+      parse,
     }
     const summary = await runScrape(
       baseDeps({ resolveAdapter: () => fetchAdapter, renderPage, httpGet })
     )
     expect(httpGet).toHaveBeenCalledTimes(1)
     expect(renderPage).not.toHaveBeenCalled()
+    expect(parse).toHaveBeenCalledWith(body)
     expect(summary.inserted).toBe(1)
+  })
+
+  it('records an error for an adapter with neither fetch nor readySelector', async () => {
+    const badAdapter: Adapter = {
+      host: 'x',
+      parse: () => [],
+    }
+    const summary = await runScrape(baseDeps({ resolveAdapter: () => badAdapter }))
+    expect(summary.failedSources).toBe(1)
+    expect(summary.perSource[0].status).toBe('error')
+    expect(summary.perSource[0].error).toMatch(/neither fetch nor readySelector/)
   })
 })

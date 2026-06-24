@@ -33,9 +33,14 @@ export const runScrape = async (deps: PipelineDeps): Promise<ScrapeSummary> => {
     let result: SourceRunResult
     try {
       const adapter = deps.resolveAdapter(source.url)
-      const content = adapter.fetch
-        ? await adapter.fetch(source.url, { httpGet: deps.httpGet })
-        : await deps.renderPage(source.url, adapter.readySelector!)
+      let content: string
+      if (adapter.fetch) {
+        content = await adapter.fetch(source.url, { httpGet: deps.httpGet })
+      } else if (adapter.readySelector) {
+        content = await deps.renderPage(source.url, adapter.readySelector)
+      } else {
+        throw new Error(`adapter for ${source.url} defines neither fetch nor readySelector`)
+      }
       const rows: JobRow[] = adapter.parse(content).map((raw) => {
         const { relevance_score, relevance_level } = deps.scoreJob(raw)
         return { ...raw, source_url: source.url, relevance_score, relevance_level }
