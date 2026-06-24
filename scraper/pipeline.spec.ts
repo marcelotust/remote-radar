@@ -22,6 +22,7 @@ const baseDeps = (over: Partial<PipelineDeps>): PipelineDeps => ({
   scoreJob: () => ({ relevance_score: 2, relevance_level: 'medium' }),
   upsertJobs: async (jobs) => ({ count: jobs.length }),
   recordSourceRun: async () => {},
+  httpGet: async () => ({ status: 200, body: '[]' }),
   ...over,
 })
 
@@ -110,5 +111,26 @@ describe('runScrape', () => {
     const summary = await runScrape(baseDeps({ recordSourceRun }))
     expect(summary.inserted).toBe(1)
     expect(summary.perSource).toHaveLength(1)
+  })
+
+  it('uses adapter.fetch (not renderPage) when the adapter defines fetch', async () => {
+    const renderPage = vi.fn(async () => '<html></html>')
+    const httpGet = vi.fn(async () => ({
+      status: 200,
+      body: JSON.stringify([{ id: 1 }]),
+    }))
+    const fetchAdapter: Adapter = {
+      host: 'api',
+      fetch: (_url, ctx) => ctx.httpGet('https://api.example/x'),
+      parse: () => [
+        { title: 'Dev', company: 'C', url: 'https://x/1', location: 'Remoto', description: null },
+      ],
+    }
+    const summary = await runScrape(
+      baseDeps({ resolveAdapter: () => fetchAdapter, renderPage, httpGet })
+    )
+    expect(httpGet).toHaveBeenCalledTimes(1)
+    expect(renderPage).not.toHaveBeenCalled()
+    expect(summary.inserted).toBe(1)
   })
 })
