@@ -30,13 +30,13 @@ insert into scraping_sources (url, label, is_active) values
   ('https://www.dice.com',            'Dice',              true),
   ('https://www.workatstartup.com',   'Work at a Startup', true),
   -- Exclusivo Remoto
-  ('https://remoteok.com',            'Remote OK',        true),
+  ('https://remoteok.com/api',        'Remote OK',        true),
   ('https://weworkremotely.com',      'We Work Remotely', true),
-  ('https://remotive.io',             'Remotive',         true),
+  ('https://remotive.com/api/remote-jobs', 'Remotive',    true),
   ('https://jobspresso.co',           'Jobspresso',       true),
-  ('https://www.workingnomads.com',   'Working Nomads',   true),
+  ('https://www.workingnomads.com/jobs', 'Working Nomads', true),
   ('https://justremote.co',           'JustRemote',       true),
-  ('https://euremotejobs.com',        'EU Remote Jobs',   true),
+  ('https://euremotejobs.com/jobs/',  'EU Remote Jobs',   true),
   -- Nichos Específicos
   ('https://jsremotely.com',          'JS Remotely',     true),
   ('https://theaijobboard.com',       'AI Jobs',         true),
