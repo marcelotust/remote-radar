@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react'
-import { NavBar } from '../components/NavBar/NavBar'
 import { FilterBar } from '../components/FilterBar/FilterBar'
 import { JobRow } from '../components/JobRow/JobRow'
 import { JobDetail } from '../components/JobDetail/JobDetail'
@@ -7,14 +6,14 @@ import { BottomSheet } from '../components/BottomSheet/BottomSheet'
 import { useJobs } from '../hooks/useJobs'
 import { useToggleJobRead } from '../hooks/useToggleJobRead'
 import { useUIContext } from '../contexts/UIContext'
-import { applyFilters } from './dashboardFilters'
+import { applyFilters } from './inboxFilters'
 import { paginate } from '../utils/paginate'
 import type { Job } from '../types'
 
 const pageButtonClass =
   'rounded-2xl border-2 border-brand-gray/30 px-3 py-1 transition-all duration-300 hover:border-brand-green/60 hover:text-brand-green disabled:opacity-40 disabled:hover:border-brand-gray/30 disabled:hover:text-gray-400'
 
-export const DashboardPage = () => {
+export const InboxPage = () => {
   const { data: jobs = [], isLoading } = useJobs()
   const { filters } = useUIContext()
   const { mutate: toggleRead } = useToggleJobRead()
@@ -31,8 +30,6 @@ export const DashboardPage = () => {
   const { pageItems, totalPages } = paginate(filteredJobs, page)
   const selectedJob = jobs.find((j) => j.id === selectedId) ?? null
 
-  // Retain the last selected job so the mobile sheet slides away with its
-  // content instead of going blank when selection clears on close.
   const [sheetJob, setSheetJob] = useState<Job | null>(null)
   useEffect(() => {
     if (selectedJob) setSheetJob(selectedJob)
@@ -44,8 +41,7 @@ export const DashboardPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-brand-bg text-white">
-      <NavBar />
+    <>
       <FilterBar />
       <main className="mx-auto flex max-w-6xl flex-col px-4 py-6 lg:flex-row lg:items-start lg:gap-6">
         <div className="flex w-full flex-col gap-1 lg:w-2/5">
@@ -98,6 +94,6 @@ export const DashboardPage = () => {
       <BottomSheet open={!!selectedJob} onClose={() => setSelectedId(null)}>
         {sheetJob && <JobDetail job={sheetJob} />}
       </BottomSheet>
-    </div>
+    </>
   )
 }

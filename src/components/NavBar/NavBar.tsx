@@ -1,24 +1,27 @@
 import { NavLink } from 'react-router-dom'
 
+const links = [
+  { to: '/', label: 'Home', end: true },
+  { to: '/inbox', label: 'Inbox', end: false },
+  { to: '/companies', label: 'Empresas', end: false },
+  { to: '/scraping-sources', label: 'Fontes', end: false },
+  { to: '/settings', label: 'Settings', end: false },
+]
+
 export const NavBar = () => (
-  <nav className="flex items-center gap-6 px-6 py-4 bg-brand-bg border-b border-brand-gray/20">
+  <nav className="flex flex-wrap items-center gap-6 px-6 py-4 bg-brand-bg border-b border-brand-gray/20">
     <span className="text-white font-bold text-lg tracking-tight">Remote Radar</span>
-    <NavLink
-      to="/"
-      end
-      className={({ isActive }) =>
-        `text-sm font-medium transition-all duration-300 ${isActive ? 'text-brand-green' : 'text-gray-400 hover:text-white'}`
-      }
-    >
-      Dashboard
-    </NavLink>
-    <NavLink
-      to="/wishlist"
-      className={({ isActive }) =>
-        `text-sm font-medium transition-all duration-300 ${isActive ? 'text-brand-green' : 'text-gray-400 hover:text-white'}`
-      }
-    >
-      Wishlist
-    </NavLink>
+    {links.map(({ to, label, end }) => (
+      <NavLink
+        key={to}
+        to={to}
+        end={end}
+        className={({ isActive }) =>
+          `text-sm font-medium transition-all duration-300 ${isActive ? 'text-brand-green' : 'text-gray-400 hover:text-white'}`
+        }
+      >
+        {label}
+      </NavLink>
+    ))}
   </nav>
 )

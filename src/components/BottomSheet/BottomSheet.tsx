@@ -13,7 +13,7 @@ interface Props {
  *
  * Callers should keep `children` populated through the exit animation (don't
  * clear them in the same render that sets `open=false`), otherwise the sheet
- * slides away empty. See DashboardPage's `sheetJob` retention.
+ * slides away empty. See InboxPage's `sheetJob` retention.
  */
 export const BottomSheet = ({ open, onClose, children }: Props) => {
   const [mounted, setMounted] = useState(open)
