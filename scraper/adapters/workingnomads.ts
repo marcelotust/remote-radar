@@ -1,10 +1,8 @@
 import { JSDOM } from 'jsdom'
 import type { Adapter, RawJob } from './types.ts'
+import { text } from './dom.ts'
 
 const BASE = 'https://www.workingnomads.com'
-
-const text = (el: Element | null): string | null =>
-  el?.textContent?.replace(/\s+/g, ' ').trim() || null
 
 export const parseWorkingNomads = (html: string): RawJob[] => {
   const { document } = new JSDOM(html).window
