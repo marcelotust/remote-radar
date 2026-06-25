@@ -9,11 +9,12 @@ const matchesKeyword = (text: string, keyword: string): boolean => {
 export const computeRelevanceScore = (
   job: Pick<Job, 'title' | 'description'>,
   config: ScoringConfig
-): { score: number; level: RelevanceLevel } => {
+): { score: number; level: RelevanceLevel; matchedKeywords: string[] } => {
   const text = `${job.title} ${job.description ?? ''}`.toLowerCase()
 
   const matched = config.keywords.filter((k) => matchesKeyword(text, k.term))
   const hasVeto = matched.some((k) => k.is_veto)
+  const positives = matched.filter((k) => !k.is_veto && k.weight > 0)
   const score = matched.filter((k) => !k.is_veto).reduce((sum, k) => sum + k.weight, 0)
 
   const level: RelevanceLevel = hasVeto
@@ -26,5 +27,5 @@ export const computeRelevanceScore = (
           ? 'low'
           : 'negative'
 
-  return { score, level }
+  return { score, level, matchedKeywords: positives.map((k) => k.term) }
 }
