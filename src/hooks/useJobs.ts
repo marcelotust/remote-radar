@@ -4,6 +4,7 @@ import { computeRelevanceScore } from '../utils/scoring'
 import { DEFAULT_SCORING_CONFIG } from '../utils/keywords'
 import type { ScoringConfig } from '../types'
 import { useCompanies } from './useCompanies'
+import { useScoringConfig } from './useScoringConfig'
 import type { Company, Job } from '../types'
 
 export const JOBS_KEY = ['jobs'] as const
@@ -34,6 +35,7 @@ export const enrichJobs = (
 
 export const useJobs = () => {
   const { data: companies = [] } = useCompanies()
+  const { data: scoringConfig = DEFAULT_SCORING_CONFIG } = useScoringConfig()
 
   return useQuery<Job[]>({
     queryKey: JOBS_KEY,
@@ -42,6 +44,6 @@ export const useJobs = () => {
       if (error) throw error
       return data as Job[]
     },
-    select: (rawJobs) => enrichJobs(rawJobs, companies),
+    select: (rawJobs) => enrichJobs(rawJobs, companies, scoringConfig),
   })
 }
