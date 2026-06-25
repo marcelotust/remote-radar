@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useScoringConfig } from '../../hooks/useScoringConfig'
 import { useReplaceScoringKeywords } from '../../hooks/useScoringConfigMutations'
 import { DEFAULT_SCORING_CONFIG } from '../../utils/keywords'
@@ -44,13 +44,18 @@ export const KeywordBuckets = () => {
   const [weak, setWeak] = useState('')
   const [negative, setNegative] = useState('')
 
+  const signature = useMemo(() => JSON.stringify(config.keywords), [config])
+
   useEffect(() => {
     const b = toBuckets(config.keywords)
     setVeto(b.veto)
     setStrong(b.strong)
     setWeak(b.weak)
     setNegative(b.negative)
-  }, [config])
+    // Seed only when the config CONTENT changes — not on every new object
+    // reference from a background refetch, which would clobber unsaved edits.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [signature])
 
   const handleSave = () => {
     const used = new Set<string>()

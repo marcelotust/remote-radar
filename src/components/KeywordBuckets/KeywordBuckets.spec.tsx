@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
@@ -69,6 +69,21 @@ describe('KeywordBuckets', () => {
       { term: 'css', weight: 1, is_veto: false },
       { term: 'wordpress', weight: -1, is_veto: false },
     ])
+  })
+
+  it('keeps unsaved edits when a background refetch returns identical config', async () => {
+    const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    render(
+      <QueryClientProvider client={qc}>
+        <KeywordBuckets />
+      </QueryClientProvider>
+    )
+    const strong = await screen.findByLabelText(/positivo forte/i)
+    await waitFor(() => expect((strong as HTMLTextAreaElement).value).toContain('react'))
+    await userEvent.clear(strong)
+    await userEvent.type(strong, 'react, vue')
+    await qc.invalidateQueries({ queryKey: SCORING_CONFIG_KEY })
+    await waitFor(() => expect((strong as HTMLTextAreaElement).value).toBe('react, vue'))
   })
 
   it('dedupes a term across buckets, keeping the earliest bucket', async () => {
