@@ -44,3 +44,12 @@ export const DEFAULT_SCORING_CONFIG: ScoringConfig = {
   highThreshold: 4,
   mediumThreshold: 1,
 }
+
+export const parseTerms = (input: string): string[] => {
+  const seen = new Set<string>()
+  for (const raw of input.split(',')) {
+    const t = raw.trim().toLowerCase()
+    if (t) seen.add(t)
+  }
+  return [...seen]
+}

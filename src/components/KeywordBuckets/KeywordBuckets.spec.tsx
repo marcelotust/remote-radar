@@ -2,7 +2,8 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { KeywordBuckets, parseTerms } from './KeywordBuckets'
+import { KeywordBuckets } from './KeywordBuckets'
+import { parseTerms } from '../../utils/keywords'
 import { SCORING_CONFIG_KEY } from '../../hooks/useScoringConfig'
 import type { ScoringConfig } from '../../types'
 
@@ -96,5 +97,14 @@ describe('KeywordBuckets', () => {
     const rules = replaceMock.mock.calls[0][0] as Array<{ term: string; weight: number }>
     const react = rules.filter((r) => r.term === 'react')
     expect(react).toEqual([{ term: 'react', weight: 2, is_veto: false }])
+  })
+
+  it('saves an empty set when all buckets are cleared', async () => {
+    renderBuckets()
+    for (const label of [/veto/i, /positivo forte/i, /positivo fraco/i, /negativo/i]) {
+      await userEvent.clear(screen.getByLabelText(label))
+    }
+    await userEvent.click(screen.getByRole('button', { name: /salvar/i }))
+    expect(replaceMock).toHaveBeenCalledWith([])
   })
 })

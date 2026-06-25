@@ -1,17 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useScoringConfig } from '../../hooks/useScoringConfig'
 import { useReplaceScoringKeywords } from '../../hooks/useScoringConfigMutations'
-import { DEFAULT_SCORING_CONFIG } from '../../utils/keywords'
+import { DEFAULT_SCORING_CONFIG, parseTerms } from '../../utils/keywords'
 import type { ScoringConfig, ScoringRule } from '../../types'
-
-export const parseTerms = (input: string): string[] => {
-  const seen = new Set<string>()
-  for (const raw of input.split(',')) {
-    const t = raw.trim().toLowerCase()
-    if (t) seen.add(t)
-  }
-  return [...seen]
-}
 
 const toBuckets = (keywords: ScoringConfig['keywords']) => {
   const veto: string[] = []
@@ -44,7 +35,7 @@ export const KeywordBuckets = () => {
   const [weak, setWeak] = useState('')
   const [negative, setNegative] = useState('')
 
-  const signature = useMemo(() => JSON.stringify(config.keywords), [config])
+  const signature = useMemo(() => JSON.stringify(config.keywords), [config.keywords])
 
   useEffect(() => {
     const b = toBuckets(config.keywords)
