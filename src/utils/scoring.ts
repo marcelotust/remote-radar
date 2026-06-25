@@ -1,4 +1,4 @@
-import type { Job, KeywordConfig, RelevanceLevel } from '../types'
+import type { Job, ScoringConfig, RelevanceLevel } from '../types'
 
 const matchesKeyword = (text: string, keyword: string): boolean => {
   const escaped = keyword.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
@@ -8,17 +8,23 @@ const matchesKeyword = (text: string, keyword: string): boolean => {
 
 export const computeRelevanceScore = (
   job: Pick<Job, 'title' | 'description'>,
-  config: KeywordConfig
+  config: ScoringConfig
 ): { score: number; level: RelevanceLevel } => {
   const text = `${job.title} ${job.description ?? ''}`.toLowerCase()
 
-  const positiveMatches = config.positive.filter((kw) => matchesKeyword(text, kw))
-  const negativeMatches = config.negative.filter((kw) => matchesKeyword(text, kw))
+  const matched = config.keywords.filter((k) => matchesKeyword(text, k.term))
+  const hasVeto = matched.some((k) => k.is_veto)
+  const score = matched.filter((k) => !k.is_veto).reduce((sum, k) => sum + k.weight, 0)
 
-  const score = positiveMatches.length - negativeMatches.length
-
-  const level: RelevanceLevel =
-    score >= 3 ? 'high' : score >= 1 ? 'medium' : score === 0 ? 'low' : 'negative'
+  const level: RelevanceLevel = hasVeto
+    ? 'negative'
+    : score >= config.highThreshold
+      ? 'high'
+      : score >= config.mediumThreshold
+        ? 'medium'
+        : score >= 0
+          ? 'low'
+          : 'negative'
 
   return { score, level }
 }

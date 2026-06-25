@@ -22,6 +22,8 @@ describe('scoreJob', () => {
       location: null,
       description: null,
     })
-    expect(result.relevance_score).toBe(0)
+    // 'java' must NOT match inside 'javascript'; 'javascript' keyword itself scores +1
+    expect(result.relevance_score).toBe(1)
+    expect(result.relevance_level).toBe('medium')
   })
 })

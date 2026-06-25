@@ -1,7 +1,8 @@
 // Test-only seed data. The app fetches from Supabase at runtime (see
 // src/lib/supabase.ts); these fixtures back the in-memory Supabase fake used in
 // tests (src/lib/__mocks__/supabase.ts).
-import type { Job, Company, ScrapingSource } from '../types'
+import type { Job, Company, ScrapingSource, ScoringKeyword, ScoringSettings } from '../types'
+import { DEFAULT_SCORING_CONFIG } from '../utils/keywords'
 
 export const MOCK_COMPANIES: Company[] = [
   {
@@ -93,6 +94,25 @@ export const MOCK_SOURCES: ScrapingSource[] = SOURCE_SEED.map((s, i) => ({
   is_active: true,
   created_at: '2026-06-01T00:00:00Z',
 }))
+
+export const MOCK_SCORING_KEYWORDS: ScoringKeyword[] = DEFAULT_SCORING_CONFIG.keywords.map(
+  (k, i) => ({
+    id: `sk${i + 1}`,
+    user_id: null,
+    created_at: '2026-06-01T00:00:00Z',
+    ...k,
+  })
+)
+
+export const MOCK_SCORING_SETTINGS: ScoringSettings[] = [
+  {
+    id: 'ss1',
+    user_id: null,
+    high_threshold: DEFAULT_SCORING_CONFIG.highThreshold,
+    medium_threshold: DEFAULT_SCORING_CONFIG.mediumThreshold,
+    created_at: '2026-06-01T00:00:00Z',
+  },
+]
 
 export const MOCK_JOBS: Job[] = [
   {

@@ -65,3 +65,79 @@ create policy "sources_anon_read"   on scraping_sources for select to anon using
 create policy "sources_anon_insert" on scraping_sources for insert to anon with check (true);
 create policy "sources_anon_update" on scraping_sources for update to anon using (true) with check (true);
 create policy "sources_anon_delete" on scraping_sources for delete to anon using (true);
+
+-- Scoring config (issue #43) ------------------------------------------------
+-- Weighted keywords + hard vetoes. `user_id` is nullable: null = global/default
+-- config. Modeled for future per-user config (filter by user_id, fall back to
+-- the global row). `nulls not distinct` keeps a single global row per term.
+create table if not exists scoring_keywords (
+  id         uuid primary key default gen_random_uuid(),
+  user_id    uuid,
+  term       text not null,
+  weight     int  not null default 1,
+  is_veto    boolean not null default false,
+  created_at timestamptz default now(),
+  unique nulls not distinct (user_id, term)
+);
+
+create table if not exists scoring_settings (
+  id               uuid primary key default gen_random_uuid(),
+  user_id          uuid,
+  high_threshold   int not null default 4,
+  medium_threshold int not null default 1,
+  created_at       timestamptz default now(),
+  unique nulls not distinct (user_id)
+);
+
+alter table scoring_keywords enable row level security;
+alter table scoring_settings enable row level security;
+
+create policy "scoring_keywords_anon_read"   on scoring_keywords for select to anon using (true);
+create policy "scoring_keywords_anon_insert" on scoring_keywords for insert to anon with check (true);
+create policy "scoring_keywords_anon_update" on scoring_keywords for update to anon using (true) with check (true);
+create policy "scoring_keywords_anon_delete" on scoring_keywords for delete to anon using (true);
+
+create policy "scoring_settings_anon_read"   on scoring_settings for select to anon using (true);
+create policy "scoring_settings_anon_insert" on scoring_settings for insert to anon with check (true);
+create policy "scoring_settings_anon_update" on scoring_settings for update to anon using (true) with check (true);
+
+-- Default global config seed.
+insert into scoring_settings (user_id, high_threshold, medium_threshold)
+values (null, 4, 1)
+on conflict do nothing;
+
+insert into scoring_keywords (user_id, term, weight, is_veto) values
+  (null, 'presencial', 0, true),
+  (null, 'híbrido', 0, true),
+  (null, 'hybrid', 0, true),
+  (null, 'on-site', 0, true),
+  (null, 'onsite', 0, true),
+  (null, 'java', 0, true),
+  (null, 'php', 0, true),
+  (null, 'cobol', 0, true),
+  (null, '.net', 0, true),
+  (null, 'c#', 0, true),
+  (null, 'golang', 0, true),
+  (null, 'react', 2, false),
+  (null, 'remote', 2, false),
+  (null, 'worldwide remote', 2, false),
+  (null, 'remote worldwide', 2, false),
+  (null, '100% remote', 2, false),
+  (null, 'frontend', 2, false),
+  (null, 'front-end', 2, false),
+  (null, 'typescript', 2, false),
+  (null, 'reactjs', 1, false),
+  (null, 'next.js', 1, false),
+  (null, 'nextjs', 1, false),
+  (null, 'tailwind', 1, false),
+  (null, 'node', 1, false),
+  (null, 'rails', 1, false),
+  (null, 'css', 1, false),
+  (null, 'javascript', 1, false),
+  (null, 'js', 1, false),
+  (null, 'figma', 1, false),
+  (null, 'ux', 1, false),
+  (null, 'ui', 1, false),
+  (null, 'hotwire', 1, false),
+  (null, 'worldwide', 1, false)
+on conflict do nothing;

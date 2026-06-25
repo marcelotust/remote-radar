@@ -4,6 +4,7 @@ import { describe, it, expect } from 'vitest'
 import { useJobs, enrichJobs } from './useJobs'
 import { useUpdateJobStatus } from './useUpdateJobStatus'
 import { useToggleJobRead } from './useToggleJobRead'
+import { useUpdateScoringSettings } from './useScoringConfigMutations'
 import type { Job, Company } from '../types'
 
 const makeWrapper = () => {
@@ -38,6 +39,23 @@ describe('useJobs', () => {
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
     const scores = result.current.data!.map((j) => j.relevance_score ?? 0)
     expect(scores).toEqual([...scores].sort((a, b) => b - a))
+  })
+
+  it('recomputes job scores when the scoring config changes', async () => {
+    const wrapper = makeWrapper()
+    const { result: jobs } = renderHook(() => useJobs(), { wrapper })
+    await waitFor(() => expect(jobs.current.isSuccess).toBe(true))
+    const stripeBefore = jobs.current.data!.find((j) => j.company === 'Stripe')!
+    // react(2)+typescript(2)+next.js(1) = 5 → high with default high_threshold=4
+    expect(stripeBefore.relevance_level).toBe('high')
+
+    const { result: upd } = renderHook(() => useUpdateScoringSettings(), { wrapper })
+    upd.current.mutate({ high_threshold: 99, medium_threshold: 1 })
+
+    await waitFor(() => {
+      const stripeAfter = jobs.current.data!.find((j) => j.company === 'Stripe')!
+      expect(stripeAfter.relevance_level).toBe('medium')
+    })
   })
 })
 
@@ -110,21 +128,15 @@ const baseJob = (over: Partial<Job>): Job => ({
 })
 
 describe('enrichJobs', () => {
-  it('prefers a stored relevance score over recomputing', () => {
+  it('always recomputes the score from the config, ignoring any stored score', () => {
     const job = baseJob({
       title: 'React TypeScript Remote',
       relevance_score: 99,
-      relevance_level: 'high',
+      relevance_level: 'low',
     })
     const [out] = enrichJobs([job], [])
-    expect(out.relevance_score).toBe(99) // not the ~3 a recompute would give
-    expect(out.relevance_level).toBe('high')
-  })
-
-  it('computes the score when none is stored', () => {
-    const job = baseJob({ title: 'React TypeScript Remote' })
-    const [out] = enrichJobs([job], [])
-    expect(out.relevance_score).toBe(3)
+    // react(2) + typescript(2) + remote(2) = 6 with DEFAULT_SCORING_CONFIG
+    expect(out.relevance_score).toBe(6)
     expect(out.relevance_level).toBe('high')
   })
 

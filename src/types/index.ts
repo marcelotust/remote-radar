@@ -41,9 +41,30 @@ export interface ScrapingSource {
   last_run_error?: string | null
 }
 
-export interface KeywordConfig {
-  positive: string[]
-  negative: string[]
+export interface ScoringRule {
+  term: string
+  weight: number
+  is_veto: boolean
+}
+
+export interface ScoringKeyword extends ScoringRule {
+  id: string
+  user_id: string | null
+  created_at: string
+}
+
+export interface ScoringSettings {
+  id: string
+  user_id: string | null
+  high_threshold: number
+  medium_threshold: number
+  created_at: string
+}
+
+export interface ScoringConfig {
+  keywords: ScoringRule[]
+  highThreshold: number
+  mediumThreshold: number
 }
 
 export type StatusFilter = 'all' | JobStatus
