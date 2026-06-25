@@ -19,17 +19,29 @@ const config: ScoringConfig = {
 describe('computeRelevanceScore', () => {
   it('sums weights and returns high at/above the high threshold', () => {
     const job = { title: 'React TypeScript Engineer', description: null }
-    expect(computeRelevanceScore(job, config)).toEqual({ score: 4, level: 'high' })
+    expect(computeRelevanceScore(job, config)).toEqual({
+      score: 4,
+      level: 'high',
+      matchedKeywords: ['react', 'typescript'],
+    })
   })
 
   it('returns medium between medium and high thresholds', () => {
     const job = { title: 'Node Developer', description: null }
-    expect(computeRelevanceScore(job, config)).toEqual({ score: 1, level: 'medium' })
+    expect(computeRelevanceScore(job, config)).toEqual({
+      score: 1,
+      level: 'medium',
+      matchedKeywords: ['node'],
+    })
   })
 
   it('returns low when score is 0', () => {
     const job = { title: 'Backend Developer', description: null }
-    expect(computeRelevanceScore(job, config)).toEqual({ score: 0, level: 'low' })
+    expect(computeRelevanceScore(job, config)).toEqual({
+      score: 0,
+      level: 'low',
+      matchedKeywords: [],
+    })
   })
 
   it('forces negative when a veto keyword matches, ignoring positive points', () => {
@@ -40,21 +52,39 @@ describe('computeRelevanceScore', () => {
 
   it('returns negative when negative-weight keywords push the score below 0', () => {
     const job = { title: 'Legacy maintainer', description: null }
-    expect(computeRelevanceScore(job, config)).toEqual({ score: -1, level: 'negative' })
+    expect(computeRelevanceScore(job, config)).toEqual({
+      score: -1,
+      level: 'negative',
+      matchedKeywords: [],
+    })
   })
 
   it('matches multi-word phrases', () => {
     const job = { title: 'Worldwide Remote React role', description: null }
-    expect(computeRelevanceScore(job, config)).toEqual({ score: 4, level: 'high' })
+    expect(computeRelevanceScore(job, config)).toEqual({
+      score: 4,
+      level: 'high',
+      matchedKeywords: ['react', 'worldwide remote'],
+    })
   })
 
   it('reads keywords from the description too', () => {
     const job = { title: 'Developer', description: 'Strong react and node skills' }
-    expect(computeRelevanceScore(job, config)).toEqual({ score: 3, level: 'medium' })
+    expect(computeRelevanceScore(job, config)).toEqual({
+      score: 3,
+      level: 'medium',
+      matchedKeywords: ['react', 'node'],
+    })
   })
 
   it('handles a null description gracefully', () => {
     const job = { title: 'Developer', description: null }
     expect(() => computeRelevanceScore(job, config)).not.toThrow()
+  })
+
+  it('excludes veto and negative-weight terms from matchedKeywords', () => {
+    const job = { title: 'React role, no java, no legacy', description: null }
+    const { matchedKeywords } = computeRelevanceScore(job, config)
+    expect(matchedKeywords).toEqual(['react'])
   })
 })

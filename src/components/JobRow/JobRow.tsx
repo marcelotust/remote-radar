@@ -47,5 +47,17 @@ export const JobRow = ({ job, selected, onSelect }: Props) => (
       {job.location && <span className="min-w-0 truncate">· {job.location}</span>}
       <span className="ml-auto shrink-0">{relativeDate(job.scraped_at)}</span>
     </div>
+    {job.matched_keywords && job.matched_keywords.length > 0 && (
+      <ul className="flex flex-wrap gap-1" aria-label="Palavras-chave de match">
+        {job.matched_keywords.map((term) => (
+          <li
+            key={term}
+            className="rounded-full bg-brand-green/10 px-2 py-0.5 text-[11px] font-medium text-brand-green"
+          >
+            {term}
+          </li>
+        ))}
+      </ul>
+    )}
   </button>
 )

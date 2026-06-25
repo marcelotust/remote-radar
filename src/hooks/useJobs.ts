@@ -17,12 +17,13 @@ export const enrichJobs = (
   const wishlistMap = new Map(companies.map((c) => [c.name.toLowerCase(), c]))
   return rawJobs
     .map((job) => {
-      const { score, level } = computeRelevanceScore(job, config)
+      const { score, level, matchedKeywords } = computeRelevanceScore(job, config)
       const wishlistCompany = wishlistMap.get(job.company.toLowerCase())
       return {
         ...job,
         relevance_score: score,
         relevance_level: level,
+        matched_keywords: matchedKeywords,
         is_wishlist_company: !!wishlistCompany,
         wishlist_remote_brazil: wishlistCompany?.remote_brazil,
       }

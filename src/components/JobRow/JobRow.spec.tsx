@@ -50,4 +50,25 @@ describe('JobRow', () => {
     render(<JobRow job={{ ...baseJob, read: true }} selected={false} onSelect={() => {}} />)
     expect(screen.getByText('Senior Frontend Engineer')).toHaveClass('text-gray-500')
   })
+
+  it('renders a tag for each positive-match keyword', () => {
+    render(
+      <JobRow
+        job={{ ...baseJob, matched_keywords: ['react', 'typescript'] }}
+        selected={false}
+        onSelect={() => {}}
+      />
+    )
+    const tags = screen.getByLabelText('Palavras-chave de match')
+    expect(tags).toBeInTheDocument()
+    expect(screen.getByText('react')).toBeInTheDocument()
+    expect(screen.getByText('typescript')).toBeInTheDocument()
+  })
+
+  it('renders no keyword list when there are no matches', () => {
+    render(
+      <JobRow job={{ ...baseJob, matched_keywords: [] }} selected={false} onSelect={() => {}} />
+    )
+    expect(screen.queryByLabelText('Palavras-chave de match')).not.toBeInTheDocument()
+  })
 })

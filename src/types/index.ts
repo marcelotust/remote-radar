@@ -16,6 +16,7 @@ export interface Job {
   source_url: string | null
   relevance_score?: number
   relevance_level?: RelevanceLevel
+  matched_keywords?: string[]
   is_wishlist_company?: boolean
   wishlist_remote_brazil?: RemoteBrazilStatus
 }
