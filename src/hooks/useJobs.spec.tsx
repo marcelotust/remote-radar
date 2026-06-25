@@ -110,21 +110,15 @@ const baseJob = (over: Partial<Job>): Job => ({
 })
 
 describe('enrichJobs', () => {
-  it('prefers a stored relevance score over recomputing', () => {
+  it('always recomputes the score from the config, ignoring any stored score', () => {
     const job = baseJob({
       title: 'React TypeScript Remote',
       relevance_score: 99,
-      relevance_level: 'high',
+      relevance_level: 'low',
     })
     const [out] = enrichJobs([job], [])
-    expect(out.relevance_score).toBe(99) // not the ~3 a recompute would give
-    expect(out.relevance_level).toBe('high')
-  })
-
-  it('computes the score when none is stored', () => {
-    const job = baseJob({ title: 'React TypeScript Remote' })
-    const [out] = enrichJobs([job], [])
-    expect(out.relevance_score).toBe(3)
+    // react(2) + typescript(2) + remote(2) = 6 with DEFAULT_SCORING_CONFIG
+    expect(out.relevance_score).toBe(6)
     expect(out.relevance_level).toBe('high')
   })
 

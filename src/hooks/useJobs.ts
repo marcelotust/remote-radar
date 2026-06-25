@@ -1,22 +1,22 @@
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { computeRelevanceScore } from '../utils/scoring'
-import { KEYWORD_CONFIG } from '../utils/keywords'
+import { DEFAULT_SCORING_CONFIG } from '../utils/keywords'
+import type { ScoringConfig } from '../types'
 import { useCompanies } from './useCompanies'
-import type { Company, Job, RelevanceLevel } from '../types'
+import type { Company, Job } from '../types'
 
 export const JOBS_KEY = ['jobs'] as const
 
-export const enrichJobs = (rawJobs: Job[], companies: Company[]): Job[] => {
+export const enrichJobs = (
+  rawJobs: Job[],
+  companies: Company[],
+  config: ScoringConfig = DEFAULT_SCORING_CONFIG
+): Job[] => {
   const wishlistMap = new Map(companies.map((c) => [c.name.toLowerCase(), c]))
   return rawJobs
     .map((job) => {
-      const hasStored = job.relevance_score != null && job.relevance_level != null
-      const computed = hasStored ? null : computeRelevanceScore(job, KEYWORD_CONFIG)
-      const score = hasStored ? (job.relevance_score as number) : computed!.score
-      const level: RelevanceLevel = hasStored
-        ? (job.relevance_level as RelevanceLevel)
-        : computed!.level
+      const { score, level } = computeRelevanceScore(job, config)
       const wishlistCompany = wishlistMap.get(job.company.toLowerCase())
       return {
         ...job,
