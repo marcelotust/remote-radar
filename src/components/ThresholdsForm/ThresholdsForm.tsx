@@ -25,7 +25,10 @@ export const ThresholdsForm = ({ highThreshold, mediumThreshold }: Props) => {
           type="number"
           aria-label="Limiar alta"
           value={highThreshold}
-          onChange={(e) => setHigh(Number(e.target.value))}
+          onChange={(e) => {
+            const n = Number(e.target.value)
+            if (e.target.value !== '' && !Number.isNaN(n)) setHigh(n)
+          }}
           className={numberInput}
         />
       </label>
@@ -35,7 +38,10 @@ export const ThresholdsForm = ({ highThreshold, mediumThreshold }: Props) => {
           type="number"
           aria-label="Limiar média"
           value={mediumThreshold}
-          onChange={(e) => setMedium(Number(e.target.value))}
+          onChange={(e) => {
+            const n = Number(e.target.value)
+            if (e.target.value !== '' && !Number.isNaN(n)) setMedium(n)
+          }}
           className={numberInput}
         />
       </label>

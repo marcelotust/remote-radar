@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { describe, it, expect, vi } from 'vitest'
@@ -46,7 +46,10 @@ describe('KeywordList', () => {
 
   it('shows the veto keyword under Vetos', () => {
     renderList()
-    expect(screen.getByText('presencial')).toBeInTheDocument()
+    const vetosSection = screen
+      .getByRole('heading', { name: /vetos/i })
+      .closest('section') as HTMLElement
+    expect(within(vetosSection).getByText('presencial')).toBeInTheDocument()
   })
 
   it('invokes onAdd when the add button is clicked', async () => {

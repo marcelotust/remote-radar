@@ -30,7 +30,7 @@ const testConfig: ScoringConfig = {
 describe('ScorePreview', () => {
   it('shows score 0 and Baixa for empty input', () => {
     renderPreview(testConfig)
-    expect(screen.getByText('0')).toBeInTheDocument()
+    expect(screen.getByText('0', { selector: 'span' })).toBeInTheDocument()
     expect(screen.getByText('Baixa')).toBeInTheDocument()
   })
 

@@ -21,10 +21,10 @@ describe('SettingsPage', () => {
 
   it('renders the interactive score editor', async () => {
     renderPage()
-    await waitFor(() =>
+    await waitFor(() => {
       expect(screen.getByRole('button', { name: /adicionar palavra/i })).toBeInTheDocument()
-    )
-    expect(screen.getByLabelText(/testar vaga/i)).toBeInTheDocument()
+      expect(screen.getByLabelText(/testar vaga/i)).toBeInTheDocument()
+    })
   })
 
   it('shows an inert theme selector with three options', () => {

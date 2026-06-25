@@ -59,7 +59,10 @@ export const AddKeywordModal = ({ open, onClose }: Props) => {
                 type="number"
                 aria-label="Peso"
                 value={weight}
-                onChange={(e) => setWeight(Number(e.target.value))}
+                onChange={(e) => {
+                  const n = Number(e.target.value)
+                  if (!Number.isNaN(n)) setWeight(n)
+                }}
                 className={inputClass}
               />
             </label>
