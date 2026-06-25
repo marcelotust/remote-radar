@@ -1,5 +1,6 @@
 import { JSDOM } from 'jsdom'
 import type { Adapter, RawJob } from './types.ts'
+import { toIsoOrNull } from './dom.ts'
 
 type Obj = Record<string, unknown>
 
@@ -52,12 +53,15 @@ export const parseJsonLd = (html: string): RawJob[] => {
     const company = org && typeof org === 'object' ? asString((org as Obj)['name']) : null
     const url = asString(p['url'])
     if (!title || !company || !url) continue
+    const datePosted = asString(p['datePosted'])
+    const published_at = toIsoOrNull(datePosted)
     jobs.push({
       title,
       company,
       url,
       location: locationOf(p),
       description: asString(p['description']),
+      published_at,
     })
   }
   return jobs

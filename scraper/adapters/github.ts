@@ -1,10 +1,13 @@
 import type { Adapter, FetchContext, RawJob } from './types.ts'
+import { RECENCY_DAYS } from '../recency.ts'
+import { toIsoOrNull } from './dom.ts'
 
 interface GithubIssue {
   title?: string
   html_url?: string
   body?: string | null
   pull_request?: unknown
+  created_at?: string
 }
 
 const NA = ' na '
@@ -56,13 +59,13 @@ export const parseGithubIssues = (json: string): RawJob[] => {
       url,
       location: 'Remoto',
       description: body ? body.slice(0, DESCRIPTION_MAX) : null,
+      published_at: toIsoOrNull(item.created_at),
     })
   }
   return jobs
 }
 
 const PER_PAGE = 100
-const RECENCY_DAYS = 60
 
 const repoFromUrl = (sourceUrl: string): string => {
   const parts = new URL(sourceUrl).pathname.split('/').filter(Boolean)

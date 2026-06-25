@@ -1,6 +1,22 @@
 import { describe, it, expect, vi } from 'vitest'
 import { runScrape, type PipelineDeps } from './pipeline.ts'
-import type { Adapter } from './adapters/types.ts'
+import type { Adapter, RawJob } from './adapters/types.ts'
+
+const datedAdapter = (jobs: RawJob[]): Adapter => ({
+  host: 'x',
+  readySelector: 'body',
+  parse: () => jobs,
+})
+
+const job = (over: Partial<RawJob>): RawJob => ({
+  title: 'Dev',
+  company: 'C',
+  url: 'https://a.com/1',
+  location: null,
+  description: null,
+  published_at: null,
+  ...over,
+})
 
 const adapter = (jobs: { title: string; url: string }[]): Adapter => ({
   host: 'x',
@@ -12,6 +28,7 @@ const adapter = (jobs: { title: string; url: string }[]): Adapter => ({
       url: j.url,
       location: null,
       description: null,
+      published_at: null,
     })),
 })
 
@@ -121,7 +138,14 @@ describe('runScrape', () => {
       body,
     }))
     const parse = vi.fn(() => [
-      { title: 'Dev', company: 'C', url: 'https://x/1', location: 'Remoto', description: null },
+      {
+        title: 'Dev',
+        company: 'C',
+        url: 'https://x/1',
+        location: 'Remoto',
+        description: null,
+        published_at: null,
+      },
     ])
     const fetchAdapter: Adapter = {
       host: 'api',
@@ -146,5 +170,44 @@ describe('runScrape', () => {
     expect(summary.failedSources).toBe(1)
     expect(summary.perSource[0].status).toBe('error')
     expect(summary.perSource[0].error).toMatch(/neither fetch nor readySelector/)
+  })
+})
+
+describe('runScrape recency window', () => {
+  const recent = new Date().toISOString()
+
+  it('drops jobs older than the cutoff but keeps recent and date-less jobs', async () => {
+    const upsertJobs = vi.fn(async (rows) => ({ count: rows.length }))
+    const resolveAdapter = () =>
+      datedAdapter([
+        job({ url: 'https://a.com/recent', published_at: recent }),
+        job({ url: 'https://a.com/old', published_at: '2000-01-01T00:00:00.000Z' }),
+        job({ url: 'https://a.com/undated', published_at: null }),
+      ])
+    const summary = await runScrape(baseDeps({ resolveAdapter, upsertJobs }))
+
+    expect(summary.extracted).toBe(2)
+    const upserted = upsertJobs.mock.calls[0][0] as { url: string }[]
+    expect(upserted.map((r) => r.url)).toEqual(['https://a.com/recent', 'https://a.com/undated'])
+  })
+
+  it('never includes published_at in the upsert payload', async () => {
+    const upsertJobs = vi.fn(async (rows) => ({ count: rows.length }))
+    const resolveAdapter = () =>
+      datedAdapter([job({ url: 'https://a.com/recent', published_at: recent })])
+    await runScrape(baseDeps({ resolveAdapter, upsertJobs }))
+
+    const upserted = upsertJobs.mock.calls[0][0] as Record<string, unknown>[]
+    expect(upserted[0]).not.toHaveProperty('published_at')
+    expect(upserted[0]).toMatchObject({
+      title: 'Dev',
+      company: 'C',
+      url: 'https://a.com/recent',
+      location: null,
+      description: null,
+      source_url: 'https://a.com',
+      relevance_score: 2,
+      relevance_level: 'medium',
+    })
   })
 })

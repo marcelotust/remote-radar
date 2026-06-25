@@ -2,7 +2,7 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
-import { remotive } from './remotive.ts'
+import { remotive, parseRemotive } from './remotive.ts'
 
 const html = readFileSync(
   fileURLToPath(new URL('./__fixtures__/remotive.html', import.meta.url)),
@@ -23,8 +23,15 @@ describe('remotive adapter', () => {
       url: 'https://remotive.com/remote-jobs/artificial-intelligence/mid-senior-ai-cinematic-video-editor-2090887',
       location: 'Worldwide',
       description: '<p>Edit cinematic AI video.</p>',
+      published_at: '2026-06-15T10:00:00.000Z',
     })
     expect(jobs[1].company).toBe('A.Team')
     expect(jobs[1].location).toBe('Americas, Europe, Israel')
+  })
+
+  it('extracts publication_date as published_at, null when absent', () => {
+    const jobs = parseRemotive(html)
+    expect(jobs[0].published_at).toBe('2026-06-15T10:00:00.000Z')
+    expect(jobs[1].published_at).toBeNull()
   })
 })

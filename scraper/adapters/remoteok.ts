@@ -1,5 +1,6 @@
 import { JSDOM } from 'jsdom'
 import type { Adapter, RawJob } from './types.ts'
+import { toIsoOrNull } from './dom.ts'
 
 interface RemoteOkJob {
   position?: string
@@ -7,6 +8,7 @@ interface RemoteOkJob {
   url?: string
   location?: string
   description?: string
+  date?: string
 }
 
 export const parseRemoteOk = (html: string): RawJob[] => {
@@ -32,6 +34,7 @@ export const parseRemoteOk = (html: string): RawJob[] => {
       url,
       location: item.location?.trim() || null,
       description: item.description?.trim() || null,
+      published_at: toIsoOrNull(item.date),
     })
   }
   return jobs

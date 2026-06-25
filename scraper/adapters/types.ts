@@ -4,6 +4,7 @@ export interface RawJob {
   url: string
   location: string | null
   description: string | null
+  published_at: string | null // ISO 8601 UTC, or null when the board exposes none
 }
 
 export interface FetchContext {
