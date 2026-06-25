@@ -31,7 +31,7 @@ type QueryResult = { data: unknown; error: Error | null }
 
 class QueryBuilder implements PromiseLike<QueryResult> {
   private op: 'select' | 'insert' | 'update' | 'delete' = 'select'
-  private payload: Row | null = null
+  private payload: Row | Row[] | null = null
   private filters: Array<[string, unknown]> = []
   private singleRow = false
 
@@ -45,7 +45,7 @@ class QueryBuilder implements PromiseLike<QueryResult> {
     return this
   }
 
-  insert(payload: Row) {
+  insert(payload: Row | Row[]) {
     this.op = 'insert'
     this.payload = payload
     return this
@@ -87,18 +87,24 @@ class QueryBuilder implements PromiseLike<QueryResult> {
 
     switch (this.op) {
       case 'insert': {
-        const row: Row = {
+        const stamp = (p: Row): Row => ({
           id: crypto.randomUUID(),
           created_at: new Date().toISOString(),
-          ...this.payload,
+          ...p,
+        })
+        if (Array.isArray(this.payload)) {
+          const rows = this.payload.map(stamp)
+          table.push(...rows)
+          return { data: structuredClone(rows), error: null }
         }
+        const row = stamp(this.payload as Row)
         table.push(row)
         return { data: structuredClone(row), error: null }
       }
       case 'update': {
         const updated = table
           .filter((r) => this.matches(r))
-          .map((r) => Object.assign(r, this.payload))
+          .map((r) => Object.assign(r, this.payload as Row))
         return {
           data: this.singleRow ? structuredClone(updated[0] ?? null) : structuredClone(updated),
           error: null,

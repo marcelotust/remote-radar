@@ -6,6 +6,7 @@ import {
   useAddScoringKeyword,
   useDeleteScoringKeyword,
   useEditScoringKeyword,
+  useReplaceScoringKeywords,
   useUpdateScoringSettings,
 } from './useScoringConfigMutations'
 
@@ -78,5 +79,28 @@ describe('useUpdateScoringSettings', () => {
 
     await waitFor(() => expect(cfg.current.data!.highThreshold).toBe(6))
     expect(cfg.current.data!.mediumThreshold).toBe(2)
+  })
+})
+
+describe('useReplaceScoringKeywords', () => {
+  it('replaces the whole keyword set', async () => {
+    const wrapper = makeWrapper()
+    const { result: cfg } = renderHook(() => useScoringConfig(), { wrapper })
+    await waitFor(() => expect(cfg.current.isSuccess).toBe(true))
+
+    const { result: rep } = renderHook(() => useReplaceScoringKeywords(), { wrapper })
+    rep.current.mutate([
+      { term: 'svelte', weight: 2, is_veto: false },
+      { term: 'cobol', weight: 0, is_veto: true },
+    ])
+
+    await waitFor(() => {
+      const terms = cfg.current.data!.keywords.map((k) => k.term).sort()
+      expect(terms).toEqual(['cobol', 'svelte'])
+    })
+    const svelte = cfg.current.data!.keywords.find((k) => k.term === 'svelte')!
+    expect(svelte).toMatchObject({ weight: 2, is_veto: false })
+    const cobol = cfg.current.data!.keywords.find((k) => k.term === 'cobol')!
+    expect(cobol).toMatchObject({ is_veto: true })
   })
 })
