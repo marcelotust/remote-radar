@@ -1,4 +1,10 @@
-import { MOCK_JOBS, MOCK_COMPANIES, MOCK_SOURCES } from '../../data/mockData'
+import {
+  MOCK_JOBS,
+  MOCK_COMPANIES,
+  MOCK_SOURCES,
+  MOCK_SCORING_KEYWORDS,
+  MOCK_SCORING_SETTINGS,
+} from '../../data/mockData'
 
 // In-memory fake of the Supabase client used in tests. It mimics the subset of
 // the query-builder API the hooks rely on (select/insert/update/delete/eq/single/
@@ -11,6 +17,8 @@ const seed = (): Record<string, Row[]> => ({
   jobs: structuredClone(MOCK_JOBS) as unknown as Row[],
   companies: structuredClone(MOCK_COMPANIES) as unknown as Row[],
   scraping_sources: structuredClone(MOCK_SOURCES) as unknown as Row[],
+  scoring_keywords: structuredClone(MOCK_SCORING_KEYWORDS) as unknown as Row[],
+  scoring_settings: structuredClone(MOCK_SCORING_SETTINGS) as unknown as Row[],
 })
 
 let db: Record<string, Row[]> = seed()
@@ -55,6 +63,11 @@ class QueryBuilder implements PromiseLike<QueryResult> {
   }
 
   eq(column: string, value: unknown) {
+    this.filters.push([column, value])
+    return this
+  }
+
+  is(column: string, value: unknown) {
     this.filters.push([column, value])
     return this
   }
