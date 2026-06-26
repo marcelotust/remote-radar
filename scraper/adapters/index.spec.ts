@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest'
 import { resolveAdapter } from './index.ts'
 import { github } from './github.ts'
+import { lever } from './lever.ts'
+import { greenhouse } from './greenhouse.ts'
 
 describe('resolveAdapter', () => {
   it('matches a known host (ignoring www.)', () => {
@@ -27,5 +29,10 @@ describe('resolveAdapter', () => {
   it('resolves github.com sources to the github adapter', () => {
     expect(resolveAdapter('https://github.com/frontendbr/vagas')).toBe(github)
     expect(resolveAdapter('https://github.com/backend-br/vagas')).toBe(github)
+  })
+
+  it('resolves ATS hosts to their adapters', () => {
+    expect(resolveAdapter('https://jobs.lever.co/acme')).toBe(lever)
+    expect(resolveAdapter('https://boards.greenhouse.io/acme')).toBe(greenhouse)
   })
 })

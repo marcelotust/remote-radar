@@ -6,6 +6,8 @@ import { remoteok } from './remoteok.ts'
 import { euremotejobs } from './euremotejobs.ts'
 import { workingnomads } from './workingnomads.ts'
 import { github } from './github.ts'
+import { lever } from './lever.ts'
+import { greenhouse } from './greenhouse.ts'
 
 const adapters: Adapter[] = [
   weworkremotely,
@@ -14,6 +16,8 @@ const adapters: Adapter[] = [
   euremotejobs,
   workingnomads,
   github,
+  lever,
+  greenhouse,
 ]
 
 export const resolveAdapter = (sourceUrl: string): Adapter => {
