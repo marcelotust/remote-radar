@@ -10,9 +10,8 @@ of:
 - **adapter planned** — a scrapeable public board with no dedicated adapter yet.
   Left `is_active = true`; build an adapter, then it resolves instead of timing out.
 
-Out of scope here: Lever/Greenhouse ATS roots (tracked in #25) and the remote
-boards still on the generic adapter (Jobspresso, JustRemote, JS Remotely,
-AI Jobs, Remote Woman, Remote Circle — tracked under #23).
+Out of scope here: the remote boards still on the generic adapter (Jobspresso,
+JustRemote, JS Remotely, AI Jobs, Remote Woman, Remote Circle — tracked under #23).
 
 ## Disabled (unviable)
 
@@ -74,3 +73,24 @@ they resolve instead of timing out.
 | JobNaGringa     | https://www.jobnagringa.com.br | BR remote board, scrapeable — adapter pending  |
 | Remotar         | https://remotar.com.br         | BR remote board, scrapeable — adapter pending  |
 | Work In Estonia | https://workinestonia.com/job  | Public job board, scrapeable — adapter pending |
+
+## Adding an ATS company target
+
+Lever and Greenhouse are per-company ATSes — each target company is one row in
+`scraping_sources`. The adapter resolves by host, so no code change is needed.
+
+1. Find the company's ATS slug from its public careers URL:
+   - Lever: `https://jobs.lever.co/<slug>`
+   - Greenhouse: `https://boards.greenhouse.io/<slug>`
+2. (Optional) Confirm the API returns jobs:
+   - Lever: `https://api.lever.co/v0/postings/<slug>?mode=json`
+   - Greenhouse: `https://boards-api.greenhouse.io/v1/boards/<slug>/jobs?content=true`
+3. Insert one row:
+
+   ```sql
+   insert into scraping_sources (url, label, is_active) values
+     ('https://jobs.lever.co/<slug>', '<Company> (Lever)', true);
+   ```
+
+The adapter emits only remote roles (Lever `workplaceType = remote` or a
+`/remote/i` location; Greenhouse a `/remote/i` `location.name`).
