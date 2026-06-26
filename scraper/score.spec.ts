@@ -9,6 +9,7 @@ describe('scoreJob', () => {
       url: 'https://x/1',
       location: 'Remote',
       description: 'Next.js and Tailwind',
+      published_at: null,
     })
     expect(result.relevance_score).toBeGreaterThanOrEqual(3)
     expect(result.relevance_level).toBe('high')
@@ -21,6 +22,7 @@ describe('scoreJob', () => {
       url: 'https://x/2',
       location: null,
       description: null,
+      published_at: null,
     })
     // 'java' must NOT match inside 'javascript'; 'javascript' keyword itself scores +1
     expect(result.relevance_score).toBe(1)
