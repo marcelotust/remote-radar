@@ -1,5 +1,4 @@
 import type { Adapter, FetchContext, RawJob } from './types.ts'
-import { toIsoOrNull } from './dom.ts'
 
 interface LeverPosting {
   text?: string
@@ -42,8 +41,9 @@ export const parseLever = (content: string): RawJob[] => {
       url,
       location: p.categories?.location?.trim() || null,
       description: p.descriptionPlain?.trim() || null,
-      published_at:
-        typeof p.createdAt === 'number' ? toIsoOrNull(new Date(p.createdAt).toISOString()) : null,
+      published_at: Number.isFinite(p.createdAt)
+        ? new Date(p.createdAt as number).toISOString()
+        : null,
     })
   }
   return jobs
