@@ -6,7 +6,7 @@ export const renderPage = async (
   browser: Browser,
   url: string,
   readySelector: string,
-  timeoutMs = 15000
+  timeoutMs = 10000
 ): Promise<string> => {
   const page = await browser.newPage()
   try {
