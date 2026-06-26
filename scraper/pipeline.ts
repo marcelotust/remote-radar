@@ -11,7 +11,11 @@ export interface PipelineDeps {
   scoreJob: (raw: RawJob) => { relevance_score: number; relevance_level: RelevanceLevel }
   upsertJobs: (jobs: JobRow[]) => Promise<{ count: number }>
   recordSourceRun: (result: SourceRunResult) => Promise<void>
+  /** Max sources rendered/fetched in parallel. Defaults to 5. */
+  concurrency?: number
 }
+
+const DEFAULT_CONCURRENCY = 5
 
 export interface ScrapeSummary {
   sources: number
@@ -21,18 +25,20 @@ export interface ScrapeSummary {
   perSource: SourceRunResult[]
 }
 
+interface SourceResult {
+  result: SourceRunResult
+  extracted: number
+}
+
 const truncate = (s: string, max: number): string => (s.length > max ? s.slice(0, max) : s)
 
 export const runScrape = async (deps: PipelineDeps): Promise<ScrapeSummary> => {
   const sources = await deps.fetchActiveSources()
   const cutoff = recencyCutoffIso()
-  const perSource: SourceRunResult[] = []
-  let extracted = 0
-  let inserted = 0
-  let failedSources = 0
 
-  for (const source of sources) {
+  const processSource = async (source: SourceRow): Promise<SourceResult> => {
     let result: SourceRunResult
+    let extracted = 0
     try {
       const adapter = deps.resolveAdapter(source.url)
       let content: string
@@ -59,12 +65,10 @@ export const runScrape = async (deps: PipelineDeps): Promise<ScrapeSummary> => {
             relevance_level,
           }
         })
-      extracted += rows.length
+      extracted = rows.length
       const { count } = await deps.upsertJobs(rows)
-      inserted += count
       result = { url: source.url, status: 'success', jobsAdded: count, error: null }
     } catch (err) {
-      failedSources += 1
       result = {
         url: source.url,
         status: 'error',
@@ -79,8 +83,28 @@ export const runScrape = async (deps: PipelineDeps): Promise<ScrapeSummary> => {
     } catch (err) {
       console.warn(`[scrape] could not record run for ${source.url} — ${(err as Error).message}`)
     }
-    perSource.push(result)
+    return { result, extracted }
   }
+
+  // Bounded worker pool: workers pull the next index off a shared counter, so at
+  // most `concurrency` sources are in flight. Results are written at the source's
+  // index, keeping `perSource` in input order regardless of finish order.
+  const results = new Array<SourceResult>(sources.length)
+  const concurrency = Math.max(1, deps.concurrency ?? DEFAULT_CONCURRENCY)
+  let next = 0
+  const worker = async (): Promise<void> => {
+    while (true) {
+      const i = next++
+      if (i >= sources.length) return
+      results[i] = await processSource(sources[i])
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(concurrency, sources.length) }, worker))
+
+  const perSource = results.map((r) => r.result)
+  const extracted = results.reduce((sum, r) => sum + r.extracted, 0)
+  const inserted = results.reduce((sum, r) => sum + r.result.jobsAdded, 0)
+  const failedSources = results.filter((r) => r.result.status === 'error').length
 
   return { sources: sources.length, extracted, inserted, failedSources, perSource }
 }
