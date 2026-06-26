@@ -34,8 +34,16 @@ export const KeywordBuckets = () => {
   const [strong, setStrong] = useState('')
   const [weak, setWeak] = useState('')
   const [negative, setNegative] = useState('')
+  const [feedback, setFeedback] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
 
   const signature = useMemo(() => JSON.stringify(config.keywords), [config.keywords])
+
+  // The success message auto-dismisses; errors stay until the next save attempt.
+  useEffect(() => {
+    if (feedback !== 'saved') return
+    const t = setTimeout(() => setFeedback('idle'), 3000)
+    return () => clearTimeout(t)
+  }, [feedback])
 
   useEffect(() => {
     const b = toBuckets(config.keywords)
@@ -62,7 +70,11 @@ export const KeywordBuckets = () => {
     add(parseTerms(strong), 2, false)
     add(parseTerms(weak), 1, false)
     add(parseTerms(negative), -1, false)
-    replace(rules)
+    setFeedback('saving')
+    replace(rules, {
+      onSuccess: () => setFeedback('saved'),
+      onError: () => setFeedback('error'),
+    })
   }
 
   const field = (label: string, value: string, onChange: (v: string) => void) => (
@@ -71,7 +83,11 @@ export const KeywordBuckets = () => {
       <textarea
         aria-label={label}
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(e) => {
+          onChange(e.target.value)
+          // Drop a stale "saved" / "error" message once the user edits again.
+          setFeedback('idle')
+        }}
         rows={2}
         className={textareaClass}
       />
@@ -84,13 +100,22 @@ export const KeywordBuckets = () => {
       {field('Positivo forte (+2)', strong, setStrong)}
       {field('Positivo fraco (+1)', weak, setWeak)}
       {field('Negativo (−1)', negative, setNegative)}
-      <button
-        type="button"
-        onClick={handleSave}
-        className="self-start rounded-2xl bg-brand-green px-4 py-1.5 text-sm font-medium text-black transition-all duration-300 hover:shadow-neon-active"
-      >
-        Salvar palavras
-      </button>
+      <div className="flex items-center gap-3">
+        <button
+          type="button"
+          onClick={handleSave}
+          disabled={feedback === 'saving'}
+          className="self-start rounded-2xl bg-brand-green px-4 py-1.5 text-sm font-medium text-black transition-all duration-300 hover:shadow-neon-active disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {feedback === 'saving' ? 'Salvando…' : 'Salvar palavras'}
+        </button>
+        <span role="status" aria-live="polite" className="text-sm">
+          {feedback === 'saved' && <span className="text-brand-green">Palavras salvas ✓</span>}
+          {feedback === 'error' && (
+            <span className="text-brand-pink">Erro ao salvar. Tente novamente.</span>
+          )}
+        </span>
+      </div>
     </div>
   )
 }

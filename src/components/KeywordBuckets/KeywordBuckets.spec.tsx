@@ -45,7 +45,7 @@ describe('parseTerms', () => {
 })
 
 describe('KeywordBuckets', () => {
-  beforeEach(() => replaceMock.mockClear())
+  beforeEach(() => replaceMock.mockReset())
 
   it('pre-fills each textarea from the config', () => {
     renderBuckets()
@@ -63,13 +63,16 @@ describe('KeywordBuckets', () => {
     await userEvent.click(screen.getByRole('button', { name: /salvar/i }))
 
     expect(replaceMock).toHaveBeenCalledTimes(1)
-    expect(replaceMock).toHaveBeenCalledWith([
-      { term: 'presencial', weight: 0, is_veto: true },
-      { term: 'react', weight: 2, is_veto: false },
-      { term: 'vue', weight: 2, is_veto: false },
-      { term: 'css', weight: 1, is_veto: false },
-      { term: 'wordpress', weight: -1, is_veto: false },
-    ])
+    expect(replaceMock).toHaveBeenCalledWith(
+      [
+        { term: 'presencial', weight: 0, is_veto: true },
+        { term: 'react', weight: 2, is_veto: false },
+        { term: 'vue', weight: 2, is_veto: false },
+        { term: 'css', weight: 1, is_veto: false },
+        { term: 'wordpress', weight: -1, is_veto: false },
+      ],
+      expect.anything()
+    )
   })
 
   it('keeps unsaved edits when a background refetch returns identical config', async () => {
@@ -105,6 +108,36 @@ describe('KeywordBuckets', () => {
       await userEvent.clear(screen.getByLabelText(label))
     }
     await userEvent.click(screen.getByRole('button', { name: /salvar/i }))
-    expect(replaceMock).toHaveBeenCalledWith([])
+    expect(replaceMock).toHaveBeenCalledWith([], expect.anything())
+  })
+
+  it('shows a success message after saving', async () => {
+    replaceMock.mockImplementation((_rules, opts) => opts?.onSuccess?.())
+    renderBuckets()
+    await userEvent.click(screen.getByRole('button', { name: /salvar/i }))
+    expect(await screen.findByText(/palavras salvas/i)).toBeInTheDocument()
+  })
+
+  it('shows an error message when saving fails', async () => {
+    replaceMock.mockImplementation((_rules, opts) => opts?.onError?.())
+    renderBuckets()
+    await userEvent.click(screen.getByRole('button', { name: /salvar/i }))
+    expect(await screen.findByText(/erro ao salvar/i)).toBeInTheDocument()
+  })
+
+  it('disables the button while a save is in flight', async () => {
+    // default mock resolves nothing, so the component stays in the saving state
+    renderBuckets()
+    await userEvent.click(screen.getByRole('button', { name: /salvar/i }))
+    expect(screen.getByRole('button', { name: /salvando/i })).toBeDisabled()
+  })
+
+  it('clears the success message once the user edits again', async () => {
+    replaceMock.mockImplementation((_rules, opts) => opts?.onSuccess?.())
+    renderBuckets()
+    await userEvent.click(screen.getByRole('button', { name: /salvar/i }))
+    expect(await screen.findByText(/palavras salvas/i)).toBeInTheDocument()
+    await userEvent.type(screen.getByLabelText(/positivo forte/i), 'x')
+    expect(screen.queryByText(/palavras salvas/i)).not.toBeInTheDocument()
   })
 })
