@@ -22,7 +22,7 @@ describe('SettingsPage', () => {
   it('renders the interactive score editor', async () => {
     renderPage()
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: /adicionar palavra/i })).toBeInTheDocument()
+      expect(screen.getByLabelText(/veto/i)).toBeInTheDocument()
       expect(screen.getByLabelText(/testar vaga/i)).toBeInTheDocument()
     })
   })

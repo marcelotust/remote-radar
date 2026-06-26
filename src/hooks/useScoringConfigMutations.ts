@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { DEFAULT_SCORING_CONFIG } from '../utils/keywords'
 import { SCORING_CONFIG_KEY } from './useScoringConfig'
-import type { ScoringConfig, ScoringKeyword } from '../types'
+import type { ScoringConfig, ScoringKeyword, ScoringRule } from '../types'
 
 type NewKeyword = Pick<ScoringKeyword, 'term' | 'weight' | 'is_veto'>
 
@@ -94,6 +94,28 @@ export const useUpdateScoringSettings = () => {
         highThreshold: patch.high_threshold,
         mediumThreshold: patch.medium_threshold,
       }))
+    },
+  })
+}
+
+export const useReplaceScoringKeywords = () => {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (rules: ScoringRule[]): Promise<void> => {
+      const { error: delError } = await supabase
+        .from('scoring_keywords')
+        .delete()
+        .is('user_id', null)
+      if (delError) throw delError
+      if (rules.length > 0) {
+        const { error: insError } = await supabase
+          .from('scoring_keywords')
+          .insert(rules.map((r) => ({ ...r, user_id: null })))
+        if (insError) throw insError
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: SCORING_CONFIG_KEY })
     },
   })
 }
