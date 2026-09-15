@@ -1,18 +1,30 @@
 import { renderHook, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 import { useJobs, enrichJobs } from './useJobs'
 import { useUpdateJobStatus } from './useUpdateJobStatus'
 import { useToggleJobRead } from './useToggleJobRead'
 import { useUpdateScoringSettings } from './useScoringConfigMutations'
-import type { Job, Company } from '../types'
+import { AuthProvider } from '../contexts/AuthContext'
+import { __setSupabaseSession } from '../lib/__mocks__/supabase'
+import { MOCK_USER_ID } from '../data/mockData'
+import type { Job } from '../types'
 
 const makeWrapper = () => {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return ({ children }: { children: React.ReactNode }) => (
-    <QueryClientProvider client={qc}>{children}</QueryClientProvider>
+    <AuthProvider>
+      <QueryClientProvider client={qc}>{children}</QueryClientProvider>
+    </AuthProvider>
   )
 }
+
+beforeEach(() => {
+  __setSupabaseSession({
+    user: { id: MOCK_USER_ID, email: 'marcelotust@gmail.com' },
+    access_token: 'x',
+  })
+})
 
 describe('useJobs', () => {
   it('returns enriched jobs with relevance_score', async () => {
@@ -26,14 +38,6 @@ describe('useJobs', () => {
     })
   })
 
-  it('marks stripe job as wishlist company', async () => {
-    const { result } = renderHook(() => useJobs(), { wrapper: makeWrapper() })
-    await waitFor(() => expect(result.current.isSuccess).toBe(true))
-    const stripeJob = result.current.data!.find((j) => j.company === 'Stripe')
-    expect(stripeJob?.is_wishlist_company).toBe(true)
-    expect(stripeJob?.wishlist_remote_brazil).toBe('yes')
-  })
-
   it('sorts jobs by relevance_score descending', async () => {
     const { result } = renderHook(() => useJobs(), { wrapper: makeWrapper() })
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
@@ -43,17 +47,20 @@ describe('useJobs', () => {
 
   it('recomputes job scores when the scoring config changes', async () => {
     const wrapper = makeWrapper()
-    const { result: jobs } = renderHook(() => useJobs(), { wrapper })
-    await waitFor(() => expect(jobs.current.isSuccess).toBe(true))
-    const stripeBefore = jobs.current.data!.find((j) => j.company === 'Stripe')!
+    // Same tree for both hooks so the settings mutation sees the session
+    // that has already resolved by the time useJobs succeeds.
+    const { result } = renderHook(() => ({ jobs: useJobs(), upd: useUpdateScoringSettings() }), {
+      wrapper,
+    })
+    await waitFor(() => expect(result.current.jobs.isSuccess).toBe(true))
+    const stripeBefore = result.current.jobs.data!.find((j) => j.company === 'Stripe')!
     // react(2)+typescript(2)+next.js(1) = 5 → high with default high_threshold=4
     expect(stripeBefore.relevance_level).toBe('high')
 
-    const { result: upd } = renderHook(() => useUpdateScoringSettings(), { wrapper })
-    upd.current.mutate({ high_threshold: 99, medium_threshold: 1 })
+    result.current.upd.mutate({ high_threshold: 99, medium_threshold: 1 })
 
     await waitFor(() => {
-      const stripeAfter = jobs.current.data!.find((j) => j.company === 'Stripe')!
+      const stripeAfter = result.current.jobs.data!.find((j) => j.company === 'Stripe')!
       expect(stripeAfter.relevance_level).toBe('medium')
     })
   })
@@ -62,51 +69,56 @@ describe('useJobs', () => {
 describe('useUpdateJobStatus', () => {
   it('optimistically updates job status in cache', async () => {
     const wrapper = makeWrapper()
-    const { result: jobsResult } = renderHook(() => useJobs(), { wrapper })
-    await waitFor(() => expect(jobsResult.current.isSuccess).toBe(true))
+    // Same tree for both hooks so the mutation sees the session that has
+    // already resolved by the time useJobs succeeds.
+    const { result } = renderHook(() => ({ jobs: useJobs(), update: useUpdateJobStatus() }), {
+      wrapper,
+    })
+    await waitFor(() => expect(result.current.jobs.isSuccess).toBe(true))
 
-    const { result: mutResult } = renderHook(() => useUpdateJobStatus(), { wrapper })
-    mutResult.current.mutate({ id: 'j1', status: 'applied' })
+    result.current.update.mutate({ id: 'j1', status: 'applied' })
 
     await waitFor(() => {
-      const updated = jobsResult.current.data?.find((j) => j.id === 'j1')
+      const updated = result.current.jobs.data?.find((j) => j.id === 'j1')
       expect(updated?.status).toBe('applied')
     })
 
     // onSettled triggers a background invalidate/refetch; the Supabase fake
     // persists the update, so the status stays 'applied' after the refetch.
-    await waitFor(() => expect(mutResult.current.isSuccess).toBe(true))
-    expect(jobsResult.current.data?.find((j) => j.id === 'j1')?.status).toBe('applied')
+    await waitFor(() => expect(result.current.update.isSuccess).toBe(true))
+    expect(result.current.jobs.data?.find((j) => j.id === 'j1')?.status).toBe('applied')
   })
 })
 
 describe('useToggleJobRead', () => {
   it('optimistically marks an unread job as read', async () => {
     const wrapper = makeWrapper()
-    const { result: jobsResult } = renderHook(() => useJobs(), { wrapper })
-    await waitFor(() => expect(jobsResult.current.isSuccess).toBe(true))
-    expect(jobsResult.current.data?.find((j) => j.id === 'j1')?.read).toBe(false)
+    const { result } = renderHook(() => ({ jobs: useJobs(), toggle: useToggleJobRead() }), {
+      wrapper,
+    })
+    await waitFor(() => expect(result.current.jobs.isSuccess).toBe(true))
+    expect(result.current.jobs.data?.find((j) => j.id === 'j1')?.read).toBe(false)
 
-    const { result: mutResult } = renderHook(() => useToggleJobRead(), { wrapper })
-    mutResult.current.mutate({ id: 'j1', read: true })
+    result.current.toggle.mutate({ id: 'j1', read: true })
 
     await waitFor(() => {
-      const updated = jobsResult.current.data?.find((j) => j.id === 'j1')
+      const updated = result.current.jobs.data?.find((j) => j.id === 'j1')
       expect(updated?.read).toBe(true)
     })
   })
 
   it('can mark a read job as unread', async () => {
     const wrapper = makeWrapper()
-    const { result: jobsResult } = renderHook(() => useJobs(), { wrapper })
-    await waitFor(() => expect(jobsResult.current.isSuccess).toBe(true))
-    expect(jobsResult.current.data?.find((j) => j.id === 'j3')?.read).toBe(true)
+    const { result } = renderHook(() => ({ jobs: useJobs(), toggle: useToggleJobRead() }), {
+      wrapper,
+    })
+    await waitFor(() => expect(result.current.jobs.isSuccess).toBe(true))
+    expect(result.current.jobs.data?.find((j) => j.id === 'j3')?.read).toBe(true)
 
-    const { result: mutResult } = renderHook(() => useToggleJobRead(), { wrapper })
-    mutResult.current.mutate({ id: 'j3', read: false })
+    result.current.toggle.mutate({ id: 'j3', read: false })
 
     await waitFor(() => {
-      const updated = jobsResult.current.data?.find((j) => j.id === 'j3')
+      const updated = result.current.jobs.data?.find((j) => j.id === 'j3')
       expect(updated?.read).toBe(false)
     })
   })
@@ -134,26 +146,16 @@ describe('enrichJobs', () => {
       relevance_score: 99,
       relevance_level: 'low',
     })
-    const [out] = enrichJobs([job], [])
+    const [out] = enrichJobs([job])
     // react(2) + typescript(2) + remote(2) = 6 with DEFAULT_SCORING_CONFIG
     expect(out.relevance_score).toBe(6)
     expect(out.relevance_level).toBe('high')
   })
 
-  it('flags wishlist companies', () => {
-    const job = baseJob({ company: 'Stripe' })
-    const companies: Company[] = [
-      { id: 'c', name: 'Stripe', website: null, notes: null, remote_brazil: 'yes', created_at: '' },
-    ]
-    const [out] = enrichJobs([job], companies)
-    expect(out.is_wishlist_company).toBe(true)
-    expect(out.wishlist_remote_brazil).toBe('yes')
-  })
-
   it('orders by scraped_at descending (newest first)', () => {
     const older = baseJob({ id: 'old', scraped_at: '2026-06-01T00:00:00Z' })
     const newer = baseJob({ id: 'new', scraped_at: '2026-06-10T00:00:00Z' })
-    const out = enrichJobs([older, newer], [])
+    const out = enrichJobs([older, newer])
     expect(out.map((j) => j.id)).toEqual(['new', 'old'])
   })
 
@@ -165,7 +167,7 @@ describe('enrichJobs', () => {
       title: 'React TypeScript Remote Engineer',
       scraped_at: '2026-06-05T00:00:00Z',
     })
-    const out = enrichJobs([lowScore, highScore], [])
+    const out = enrichJobs([lowScore, highScore])
     expect(out.map((j) => j.id)).toEqual(['high', 'low'])
   })
 })

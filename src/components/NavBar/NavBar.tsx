@@ -4,7 +4,6 @@ import { useAuth } from '../../contexts/AuthContext'
 const links = [
   { to: '/', label: 'Início', end: true },
   { to: '/inbox', label: 'Caixa', end: false },
-  { to: '/companies', label: 'Empresas', end: false },
   { to: '/scraping-sources', label: 'Fontes', end: false },
   { to: '/settings', label: 'Ajustes', end: false },
 ]

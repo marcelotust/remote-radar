@@ -4,13 +4,13 @@ import { describe, it, expect } from 'vitest'
 import { UIProvider, useUIContext } from './UIContext'
 
 const TestConsumer = () => {
-  const { filters, setFilters, companyModalOpen, setCompanyModalOpen } = useUIContext()
+  const { filters, setFilters, sourceModalOpen, setSourceModalOpen } = useUIContext()
   return (
     <div>
       <span data-testid="status">{filters.status}</span>
-      <span data-testid="modal">{String(companyModalOpen)}</span>
+      <span data-testid="modal">{String(sourceModalOpen)}</span>
       <button onClick={() => setFilters({ status: 'applied' })}>set-status</button>
-      <button onClick={() => setCompanyModalOpen(true)}>open-modal</button>
+      <button onClick={() => setSourceModalOpen(true)}>open-modal</button>
     </div>
   )
 }
@@ -35,7 +35,7 @@ describe('UIContext', () => {
     expect(screen.getByTestId('status').textContent).toBe('applied')
   })
 
-  it('opens company modal', async () => {
+  it('opens source modal', async () => {
     render(
       <UIProvider>
         <TestConsumer />

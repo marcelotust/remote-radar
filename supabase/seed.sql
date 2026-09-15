@@ -2,16 +2,6 @@
 -- Mirrors src/data/mockData.ts so a fresh database has something to show.
 -- Safe to re-run: uses ON CONFLICT / NOT EXISTS guards.
 
--- Companies -----------------------------------------------------------------
-insert into companies (name, website, notes, remote_brazil)
-select v.name, v.website, v.notes, v.remote_brazil
-from (values
-  ('Stripe',     'https://stripe.com',     'Strong eng culture, fully remote', 'yes'),
-  ('Cloudflare', 'https://cloudflare.com',  null,                              'unknown'),
-  ('Acme Corp',  null,                      'Only hires US-based',             'no')
-) as v(name, website, notes, remote_brazil)
-where not exists (select 1 from companies c where c.name = v.name);
-
 -- Scraping sources ----------------------------------------------------------
 insert into scraping_sources (url, label, is_active) values
   -- Existentes
