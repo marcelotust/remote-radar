@@ -1,17 +1,19 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
+import { useAuth } from '../contexts/AuthContext'
 import { SOURCES_KEY } from './useSources'
 import type { ScrapingSource } from '../types'
 
-type NewSource = Omit<ScrapingSource, 'id' | 'created_at'>
+type NewSource = Pick<ScrapingSource, 'label' | 'url' | 'is_active'>
 
 export const useAddSource = () => {
   const qc = useQueryClient()
+  const { user } = useAuth()
   return useMutation({
     mutationFn: async (data: NewSource): Promise<ScrapingSource> => {
       const { data: inserted, error } = await supabase
         .from('scraping_sources')
-        .insert(data)
+        .insert({ ...data, created_by: user?.id ?? null, created_by_email: user?.email ?? null })
         .select()
         .single()
       if (error) throw error

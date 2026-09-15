@@ -33,6 +33,8 @@ export interface ScrapingSource {
   label: string
   is_active: boolean
   created_at: string
+  created_by?: string | null
+  created_by_email?: string | null
   last_run_at?: string | null
   last_run_jobs_added?: number | null
   last_run_status?: 'success' | 'error' | null

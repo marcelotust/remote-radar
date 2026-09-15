@@ -1,5 +1,6 @@
 import { useDeleteSource, useEditSource } from '../../hooks/useSourceMutations'
 import { useUIContext } from '../../contexts/UIContext'
+import { useAuth } from '../../contexts/AuthContext'
 import { Toggle } from '../Toggle/Toggle'
 import type { ScrapingSource } from '../../types'
 import { formatLastRun } from './formatLastRun'
@@ -12,6 +13,8 @@ export const SourceCard = ({ source }: Props) => {
   const { mutate: deleteSource } = useDeleteSource()
   const { mutate: editSource } = useEditSource()
   const { setEditingSource, setSourceModalOpen } = useUIContext()
+  const { user } = useAuth()
+  const isOwner = !source.created_by || source.created_by === user?.id
 
   const lastRun = formatLastRun(source)
   const lastRunClass =
@@ -44,22 +47,28 @@ export const SourceCard = ({ source }: Props) => {
         {lastRun.text}
       </p>
 
-      <div className="flex items-center gap-2 mt-1">
-        <button
-          onClick={handleEdit}
-          aria-label="Editar"
-          className="text-xs text-gray-400 hover:text-brand-green transition-all duration-300"
-        >
-          Editar
-        </button>
-        <button
-          onClick={() => deleteSource(source.id)}
-          aria-label="Excluir"
-          className="text-xs text-brand-pink hover:text-brand-pink/80 transition-all duration-300"
-        >
-          Excluir
-        </button>
-      </div>
+      {source.created_by_email && (
+        <p className="text-gray-600 text-xs">adicionado por {source.created_by_email}</p>
+      )}
+
+      {isOwner && (
+        <div className="flex items-center gap-2 mt-1">
+          <button
+            onClick={handleEdit}
+            aria-label="Editar"
+            className="text-xs text-gray-400 hover:text-brand-green transition-all duration-300"
+          >
+            Editar
+          </button>
+          <button
+            onClick={() => deleteSource(source.id)}
+            aria-label="Excluir"
+            className="text-xs text-brand-pink hover:text-brand-pink/80 transition-all duration-300"
+          >
+            Excluir
+          </button>
+        </div>
+      )}
     </article>
   )
 }

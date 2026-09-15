@@ -3,12 +3,16 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { describe, it, expect } from 'vitest'
 import { useSources } from './useSources'
 import { useAddSource, useDeleteSource } from './useSourceMutations'
+import { AuthProvider } from '../contexts/AuthContext'
+import { __setSupabaseSession } from '../lib/__mocks__/supabase'
 import { MOCK_SOURCES } from '../data/mockData'
 
 const makeWrapper = () => {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return ({ children }: { children: React.ReactNode }) => (
-    <QueryClientProvider client={qc}>{children}</QueryClientProvider>
+    <AuthProvider>
+      <QueryClientProvider client={qc}>{children}</QueryClientProvider>
+    </AuthProvider>
   )
 }
 
@@ -33,6 +37,25 @@ describe('useAddSource', () => {
     addResult.current.mutate({ url: 'https://example.com', label: 'Example', is_active: true })
 
     await waitFor(() => expect(sourcesResult.current.data!.length).toBe(initialLength + 1))
+  })
+
+  it('stamps created_by and created_by_email from the current session', async () => {
+    __setSupabaseSession({ user: { id: 'u1', email: 'me@example.com' }, access_token: 'x' })
+    const wrapper = makeWrapper()
+    // Same tree for both hooks so useAddSource sees the session that has
+    // already resolved by the time useSources succeeds.
+    const { result } = renderHook(() => ({ sources: useSources(), add: useAddSource() }), {
+      wrapper,
+    })
+    await waitFor(() => expect(result.current.sources.isSuccess).toBe(true))
+
+    result.current.add.mutate({ url: 'https://example.org', label: 'Mine', is_active: true })
+
+    await waitFor(() => {
+      const added = result.current.sources.data!.find((s) => s.label === 'Mine')
+      expect(added?.created_by).toBe('u1')
+      expect(added?.created_by_email).toBe('me@example.com')
+    })
   })
 })
 

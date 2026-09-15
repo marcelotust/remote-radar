@@ -49,6 +49,8 @@ create table if not exists scraping_sources (
   label               text not null,
   is_active           boolean not null default true,
   created_at          timestamptz default now(),
+  created_by          uuid references auth.users(id),
+  created_by_email    text,
   last_run_at         timestamptz,
   last_run_jobs_added int,
   last_run_status     text check (last_run_status in ('success', 'error')),
@@ -68,10 +70,17 @@ alter table scraping_sources enable row level security;
 create policy "jobs_authenticated_read"   on jobs for select to authenticated using (true);
 create policy "jobs_authenticated_update" on jobs for update to authenticated using (true) with check (true);
 
+-- Sources are shared (everyone reads all of them), but only the creator can
+-- edit/delete their own. Legacy rows seeded before this column existed have
+-- created_by = null — treated as editable by anyone rather than locked
+-- forever (#73).
 create policy "sources_authenticated_read"   on scraping_sources for select to authenticated using (true);
 create policy "sources_authenticated_insert" on scraping_sources for insert to authenticated with check (true);
-create policy "sources_authenticated_update" on scraping_sources for update to authenticated using (true) with check (true);
-create policy "sources_authenticated_delete" on scraping_sources for delete to authenticated using (true);
+create policy "sources_authenticated_update" on scraping_sources for update to authenticated
+  using (created_by = auth.uid() or created_by is null)
+  with check (created_by = auth.uid() or created_by is null);
+create policy "sources_authenticated_delete" on scraping_sources for delete to authenticated
+  using (created_by = auth.uid() or created_by is null);
 
 -- Scoring config (issue #43) ------------------------------------------------
 -- Weighted keywords + hard vetoes. `user_id` is nullable: null = global/default
