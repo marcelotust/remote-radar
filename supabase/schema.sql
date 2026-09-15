@@ -101,6 +101,31 @@ create policy "scoring_settings_anon_read"   on scoring_settings for select to a
 create policy "scoring_settings_anon_insert" on scoring_settings for insert to anon with check (true);
 create policy "scoring_settings_anon_update" on scoring_settings for update to anon using (true) with check (true);
 
+-- Allowlist + magic-link auth (#71) ------------------------------------------
+-- No UI to manage this yet: add a friend with
+--   insert into allowed_users (email) values ('amigo@example.com');
+create table if not exists allowed_users (
+  email      text primary key,
+  created_at timestamptz default now()
+);
+
+alter table allowed_users enable row level security;
+-- No select policy: the table is never read directly by any client role,
+-- only through the security-definer RPC below (keeps the email list private).
+
+create or replace function is_email_allowed(check_email text)
+returns boolean
+language sql
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1 from allowed_users where email = lower(check_email)
+  );
+$$;
+
+grant execute on function is_email_allowed(text) to anon, authenticated;
+
 -- Default global config seed.
 insert into scoring_settings (user_id, high_threshold, medium_threshold)
 values (null, 4, 1)

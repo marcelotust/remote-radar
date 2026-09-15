@@ -4,6 +4,8 @@
 import type { Job, Company, ScrapingSource, ScoringKeyword, ScoringSettings } from '../types'
 import { DEFAULT_SCORING_CONFIG } from '../utils/keywords'
 
+export const MOCK_ALLOWED_USERS: { email: string }[] = [{ email: 'marcelotust@gmail.com' }]
+
 export const MOCK_COMPANIES: Company[] = [
   {
     id: 'c1',
