@@ -5,6 +5,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { KeywordBuckets } from './KeywordBuckets'
 import { parseTerms } from '../../utils/keywords'
 import { SCORING_CONFIG_KEY } from '../../hooks/useScoringConfig'
+import { AuthProvider } from '../../contexts/AuthContext'
+import { __setSupabaseSession } from '../../lib/__mocks__/supabase'
 import type { ScoringConfig } from '../../types'
 
 const { replaceMock } = vi.hoisted(() => ({ replaceMock: vi.fn() }))
@@ -25,6 +27,7 @@ const config: ScoringConfig = {
 }
 
 const renderBuckets = (cfg: ScoringConfig = config) => {
+  __setSupabaseSession({ user: { id: 'u1', email: 'marcelotust@gmail.com' }, access_token: 'x' })
   const qc = new QueryClient({
     defaultOptions: {
       queries: { retry: false, staleTime: Infinity },
@@ -32,9 +35,11 @@ const renderBuckets = (cfg: ScoringConfig = config) => {
   })
   qc.setQueryData(SCORING_CONFIG_KEY, cfg)
   render(
-    <QueryClientProvider client={qc}>
-      <KeywordBuckets />
-    </QueryClientProvider>
+    <AuthProvider>
+      <QueryClientProvider client={qc}>
+        <KeywordBuckets />
+      </QueryClientProvider>
+    </AuthProvider>
   )
 }
 
@@ -76,13 +81,20 @@ describe('KeywordBuckets', () => {
   })
 
   it('keeps unsaved edits when a background refetch returns identical config', async () => {
+    __setSupabaseSession({ user: { id: 'u1', email: 'marcelotust@gmail.com' }, access_token: 'x' })
     const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
     render(
-      <QueryClientProvider client={qc}>
-        <KeywordBuckets />
-      </QueryClientProvider>
+      <AuthProvider>
+        <QueryClientProvider client={qc}>
+          <KeywordBuckets />
+        </QueryClientProvider>
+      </AuthProvider>
     )
     const strong = await screen.findByLabelText(/positivo forte/i)
+    // Wait for the query to fully settle (auth resolves, then the fetch
+    // completes) before typing, so the seeding effect isn't still re-running
+    // underneath the user's keystrokes.
+    await waitFor(() => expect(qc.getQueryState(SCORING_CONFIG_KEY)?.status).toBe('success'))
     await waitFor(() => expect((strong as HTMLTextAreaElement).value).toContain('react'))
     await userEvent.clear(strong)
     await userEvent.type(strong, 'react, vue')

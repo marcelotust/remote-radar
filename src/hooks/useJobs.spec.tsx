@@ -47,17 +47,20 @@ describe('useJobs', () => {
 
   it('recomputes job scores when the scoring config changes', async () => {
     const wrapper = makeWrapper()
-    const { result: jobs } = renderHook(() => useJobs(), { wrapper })
-    await waitFor(() => expect(jobs.current.isSuccess).toBe(true))
-    const stripeBefore = jobs.current.data!.find((j) => j.company === 'Stripe')!
+    // Same tree for both hooks so the settings mutation sees the session
+    // that has already resolved by the time useJobs succeeds.
+    const { result } = renderHook(() => ({ jobs: useJobs(), upd: useUpdateScoringSettings() }), {
+      wrapper,
+    })
+    await waitFor(() => expect(result.current.jobs.isSuccess).toBe(true))
+    const stripeBefore = result.current.jobs.data!.find((j) => j.company === 'Stripe')!
     // react(2)+typescript(2)+next.js(1) = 5 → high with default high_threshold=4
     expect(stripeBefore.relevance_level).toBe('high')
 
-    const { result: upd } = renderHook(() => useUpdateScoringSettings(), { wrapper })
-    upd.current.mutate({ high_threshold: 99, medium_threshold: 1 })
+    result.current.upd.mutate({ high_threshold: 99, medium_threshold: 1 })
 
     await waitFor(() => {
-      const stripeAfter = jobs.current.data!.find((j) => j.company === 'Stripe')!
+      const stripeAfter = result.current.jobs.data!.find((j) => j.company === 'Stripe')!
       expect(stripeAfter.relevance_level).toBe('medium')
     })
   })
