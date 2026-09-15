@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
+import { useAuth } from '../contexts/AuthContext'
 import { JOBS_KEY } from './useJobs'
 import type { Job } from '../types'
 
@@ -10,12 +11,15 @@ interface TogglePayload {
 
 export const useToggleJobRead = () => {
   const qc = useQueryClient()
+  const { user } = useAuth()
   return useMutation({
     mutationFn: async (payload: TogglePayload): Promise<TogglePayload> => {
       const { error } = await supabase
-        .from('jobs')
-        .update({ read: payload.read })
-        .eq('id', payload.id)
+        .from('job_user_state')
+        .upsert(
+          { user_id: user!.id, job_id: payload.id, read: payload.read },
+          { onConflict: 'user_id,job_id' }
+        )
       if (error) throw error
       return payload
     },

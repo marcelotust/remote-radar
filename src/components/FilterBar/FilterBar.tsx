@@ -46,13 +46,6 @@ export const FilterBar = () => {
       </div>
 
       <Toggle
-        id="wishlist-filter"
-        label="Wishlist"
-        checked={filters.wishlistOnly}
-        onChange={(checked) => setFilters({ wishlistOnly: checked })}
-      />
-
-      <Toggle
         id="unread-filter"
         label="Não lidas"
         checked={filters.unreadOnly}

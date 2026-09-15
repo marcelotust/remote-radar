@@ -5,7 +5,6 @@ import type { Job, FilterState } from '../types'
 const base: FilterState = {
   status: 'all',
   relevance: 'all',
-  wishlistOnly: false,
   unreadOnly: false,
 }
 
@@ -38,14 +37,8 @@ describe('applyFilters (inbox)', () => {
     expect(applyFilters(jobs, { ...base, relevance: 'high' }).map((j) => j.id)).toEqual(['a'])
   })
 
-  it('respects wishlistOnly and unreadOnly', () => {
-    const jobs = [
-      job({ id: 'a', is_wishlist_company: true, read: false }),
-      job({ id: 'b', is_wishlist_company: false, read: false }),
-      job({ id: 'c', is_wishlist_company: true, read: true }),
-    ]
-    expect(
-      applyFilters(jobs, { ...base, wishlistOnly: true, unreadOnly: true }).map((j) => j.id)
-    ).toEqual(['a'])
+  it('respects unreadOnly', () => {
+    const jobs = [job({ id: 'a', read: false }), job({ id: 'b', read: true })]
+    expect(applyFilters(jobs, { ...base, unreadOnly: true }).map((j) => j.id)).toEqual(['a'])
   })
 })

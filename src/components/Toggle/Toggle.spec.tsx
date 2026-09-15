@@ -10,14 +10,14 @@ describe('Toggle', () => {
   })
 
   it('reflects the checked state', () => {
-    render(<Toggle id="t" label="Wishlist" checked onChange={() => {}} />)
-    expect(screen.getByLabelText(/wishlist/i)).toBeChecked()
+    render(<Toggle id="t" label="Ativo" checked onChange={() => {}} />)
+    expect(screen.getByLabelText(/ativo/i)).toBeChecked()
   })
 
   it('calls onChange with the next value when clicked', async () => {
     const onChange = vi.fn()
-    render(<Toggle id="t" label="Wishlist" checked={false} onChange={onChange} />)
-    await userEvent.click(screen.getByLabelText(/wishlist/i))
+    render(<Toggle id="t" label="Ativo" checked={false} onChange={onChange} />)
+    await userEvent.click(screen.getByLabelText(/ativo/i))
     expect(onChange).toHaveBeenCalledWith(true)
   })
 })
