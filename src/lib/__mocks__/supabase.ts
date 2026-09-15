@@ -4,6 +4,7 @@ import {
   MOCK_SOURCES,
   MOCK_SCORING_KEYWORDS,
   MOCK_SCORING_SETTINGS,
+  MOCK_ALLOWED_USERS,
 } from '../../data/mockData'
 
 // In-memory fake of the Supabase client used in tests. It mimics the subset of
@@ -19,12 +20,34 @@ const seed = (): Record<string, Row[]> => ({
   scraping_sources: structuredClone(MOCK_SOURCES) as unknown as Row[],
   scoring_keywords: structuredClone(MOCK_SCORING_KEYWORDS) as unknown as Row[],
   scoring_settings: structuredClone(MOCK_SCORING_SETTINGS) as unknown as Row[],
+  allowed_users: structuredClone(MOCK_ALLOWED_USERS) as unknown as Row[],
 })
 
 let db: Record<string, Row[]> = seed()
 
+// --- Auth fake ---------------------------------------------------------
+// Minimal fake session: only the shape AuthContext actually reads
+// (`session.user.id` / `session.user.email`).
+export type FakeSession = { user: { id: string; email: string }; access_token: string }
+type AuthChangeCallback = (event: string, session: FakeSession | null) => void
+
+let session: FakeSession | null = null
+let authListeners: AuthChangeCallback[] = []
+
+const notifyAuthListeners = (event: string) => {
+  authListeners.forEach((cb) => cb(event, session))
+}
+
+/** Test helper: simulate a signed-in (or signed-out, passing null) user. */
+export const __setSupabaseSession = (next: FakeSession | null) => {
+  session = next
+  notifyAuthListeners(next ? 'SIGNED_IN' : 'SIGNED_OUT')
+}
+
 export const __resetSupabaseMock = () => {
   db = seed()
+  session = null
+  authListeners = []
 }
 
 type QueryResult = { data: unknown; error: Error | null }
@@ -134,4 +157,35 @@ class QueryBuilder implements PromiseLike<QueryResult> {
 
 export const supabase = {
   from: (table: string) => new QueryBuilder(table),
+  auth: {
+    getSession: async () => ({ data: { session }, error: null }),
+    onAuthStateChange: (callback: AuthChangeCallback) => {
+      authListeners.push(callback)
+      return {
+        data: {
+          subscription: {
+            unsubscribe: () => {
+              authListeners = authListeners.filter((cb) => cb !== callback)
+            },
+          },
+        },
+      }
+    },
+    signInWithOtp: async ({ email }: { email: string }) => {
+      if (!email.includes('@')) return { data: {}, error: new Error('Invalid email') }
+      return { data: {}, error: null }
+    },
+    signOut: async () => {
+      __setSupabaseSession(null)
+      return { error: null }
+    },
+  },
+  rpc: (fn: string, params?: Record<string, unknown>) => {
+    if (fn === 'is_email_allowed') {
+      const checkEmail = String(params?.check_email ?? '').toLowerCase()
+      const allowed = db.allowed_users.some((row) => row.email === checkEmail)
+      return Promise.resolve({ data: allowed, error: null })
+    }
+    return Promise.resolve({ data: null, error: new Error(`Unknown rpc: ${fn}`) })
+  },
 }
