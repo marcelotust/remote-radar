@@ -44,27 +44,29 @@ create table if not exists scraping_sources (
 );
 
 -- Row Level Security ---------------------------------------------------------
--- The app uses the anon key from the browser. Policy intent:
---   jobs              → anon read + update (status / read toggles)
---   companies         → anon read + write (wishlist CRUD)
---   scraping_sources  → anon read + write (source CRUD)
+-- The browser client only ever holds a signed-in session (see #71); the anon
+-- key alone can't read or write anything past the allowlist RPC below. Policy
+-- intent:
+--   jobs              → authenticated read + update (status / read toggles)
+--   companies         → anon read + write (wishlist CRUD) — table removed (#76)
+--   scraping_sources  → authenticated read + write (source CRUD)
 
 alter table jobs enable row level security;
 alter table companies enable row level security;
 alter table scraping_sources enable row level security;
 
-create policy "jobs_anon_read"   on jobs for select to anon using (true);
-create policy "jobs_anon_update" on jobs for update to anon using (true) with check (true);
+create policy "jobs_authenticated_read"   on jobs for select to authenticated using (true);
+create policy "jobs_authenticated_update" on jobs for update to authenticated using (true) with check (true);
 
 create policy "companies_anon_read"   on companies for select to anon using (true);
 create policy "companies_anon_insert" on companies for insert to anon with check (true);
 create policy "companies_anon_update" on companies for update to anon using (true) with check (true);
 create policy "companies_anon_delete" on companies for delete to anon using (true);
 
-create policy "sources_anon_read"   on scraping_sources for select to anon using (true);
-create policy "sources_anon_insert" on scraping_sources for insert to anon with check (true);
-create policy "sources_anon_update" on scraping_sources for update to anon using (true) with check (true);
-create policy "sources_anon_delete" on scraping_sources for delete to anon using (true);
+create policy "sources_authenticated_read"   on scraping_sources for select to authenticated using (true);
+create policy "sources_authenticated_insert" on scraping_sources for insert to authenticated with check (true);
+create policy "sources_authenticated_update" on scraping_sources for update to authenticated using (true) with check (true);
+create policy "sources_authenticated_delete" on scraping_sources for delete to authenticated using (true);
 
 -- Scoring config (issue #43) ------------------------------------------------
 -- Weighted keywords + hard vetoes. `user_id` is nullable: null = global/default
@@ -92,14 +94,14 @@ create table if not exists scoring_settings (
 alter table scoring_keywords enable row level security;
 alter table scoring_settings enable row level security;
 
-create policy "scoring_keywords_anon_read"   on scoring_keywords for select to anon using (true);
-create policy "scoring_keywords_anon_insert" on scoring_keywords for insert to anon with check (true);
-create policy "scoring_keywords_anon_update" on scoring_keywords for update to anon using (true) with check (true);
-create policy "scoring_keywords_anon_delete" on scoring_keywords for delete to anon using (true);
+create policy "scoring_keywords_authenticated_read"   on scoring_keywords for select to authenticated using (true);
+create policy "scoring_keywords_authenticated_insert" on scoring_keywords for insert to authenticated with check (true);
+create policy "scoring_keywords_authenticated_update" on scoring_keywords for update to authenticated using (true) with check (true);
+create policy "scoring_keywords_authenticated_delete" on scoring_keywords for delete to authenticated using (true);
 
-create policy "scoring_settings_anon_read"   on scoring_settings for select to anon using (true);
-create policy "scoring_settings_anon_insert" on scoring_settings for insert to anon with check (true);
-create policy "scoring_settings_anon_update" on scoring_settings for update to anon using (true) with check (true);
+create policy "scoring_settings_authenticated_read"   on scoring_settings for select to authenticated using (true);
+create policy "scoring_settings_authenticated_insert" on scoring_settings for insert to authenticated with check (true);
+create policy "scoring_settings_authenticated_update" on scoring_settings for update to authenticated using (true) with check (true);
 
 -- Allowlist + magic-link auth (#71) ------------------------------------------
 -- No UI to manage this yet: add a friend with
