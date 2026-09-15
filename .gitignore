@@ -11,3 +11,9 @@ coverage
 *.tsbuildinfo
 
 .DS_Store
+
+# Local Claude Code MCP/skill tooling config (machine-specific, not project source)
+.mcp.json
+.agents/
+.claude/skills/
+skills-lock.json
