@@ -4,7 +4,6 @@ import { UIProvider } from './contexts/UIContext'
 import { Layout } from './components/Layout/Layout'
 import { HomePage } from './pages/HomePage'
 import { InboxPage } from './pages/InboxPage'
-import { CompaniesPage } from './pages/CompaniesPage'
 import { ScrapingSourcesPage } from './pages/ScrapingSourcesPage'
 import { SettingsPage } from './pages/SettingsPage'
 
@@ -18,10 +17,8 @@ export const App = () => (
           <Route element={<Layout />}>
             <Route path="/" element={<HomePage />} />
             <Route path="/inbox" element={<InboxPage />} />
-            <Route path="/companies" element={<CompaniesPage />} />
             <Route path="/scraping-sources" element={<ScrapingSourcesPage />} />
             <Route path="/settings" element={<SettingsPage />} />
-            <Route path="/wishlist" element={<Navigate to="/companies" replace />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Routes>

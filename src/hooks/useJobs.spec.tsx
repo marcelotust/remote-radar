@@ -5,7 +5,7 @@ import { useJobs, enrichJobs } from './useJobs'
 import { useUpdateJobStatus } from './useUpdateJobStatus'
 import { useToggleJobRead } from './useToggleJobRead'
 import { useUpdateScoringSettings } from './useScoringConfigMutations'
-import type { Job, Company } from '../types'
+import type { Job } from '../types'
 
 const makeWrapper = () => {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
@@ -24,14 +24,6 @@ describe('useJobs', () => {
       expect(j.relevance_score).toBeDefined()
       expect(j.relevance_level).toBeDefined()
     })
-  })
-
-  it('marks stripe job as wishlist company', async () => {
-    const { result } = renderHook(() => useJobs(), { wrapper: makeWrapper() })
-    await waitFor(() => expect(result.current.isSuccess).toBe(true))
-    const stripeJob = result.current.data!.find((j) => j.company === 'Stripe')
-    expect(stripeJob?.is_wishlist_company).toBe(true)
-    expect(stripeJob?.wishlist_remote_brazil).toBe('yes')
   })
 
   it('sorts jobs by relevance_score descending', async () => {
@@ -134,26 +126,16 @@ describe('enrichJobs', () => {
       relevance_score: 99,
       relevance_level: 'low',
     })
-    const [out] = enrichJobs([job], [])
+    const [out] = enrichJobs([job])
     // react(2) + typescript(2) + remote(2) = 6 with DEFAULT_SCORING_CONFIG
     expect(out.relevance_score).toBe(6)
     expect(out.relevance_level).toBe('high')
   })
 
-  it('flags wishlist companies', () => {
-    const job = baseJob({ company: 'Stripe' })
-    const companies: Company[] = [
-      { id: 'c', name: 'Stripe', website: null, notes: null, remote_brazil: 'yes', created_at: '' },
-    ]
-    const [out] = enrichJobs([job], companies)
-    expect(out.is_wishlist_company).toBe(true)
-    expect(out.wishlist_remote_brazil).toBe('yes')
-  })
-
   it('orders by scraped_at descending (newest first)', () => {
     const older = baseJob({ id: 'old', scraped_at: '2026-06-01T00:00:00Z' })
     const newer = baseJob({ id: 'new', scraped_at: '2026-06-10T00:00:00Z' })
-    const out = enrichJobs([older, newer], [])
+    const out = enrichJobs([older, newer])
     expect(out.map((j) => j.id)).toEqual(['new', 'old'])
   })
 
@@ -165,7 +147,7 @@ describe('enrichJobs', () => {
       title: 'React TypeScript Remote Engineer',
       scraped_at: '2026-06-05T00:00:00Z',
     })
-    const out = enrichJobs([lowScore, highScore], [])
+    const out = enrichJobs([lowScore, highScore])
     expect(out.map((j) => j.id)).toEqual(['high', 'low'])
   })
 })
