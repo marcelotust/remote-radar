@@ -2,13 +2,18 @@ import { render, screen, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { describe, it, expect } from 'vitest'
 import { ScoringConfigEditor } from './ScoringConfigEditor'
+import { AuthProvider } from '../../contexts/AuthContext'
+import { __setSupabaseSession } from '../../lib/__mocks__/supabase'
 
 const renderEditor = () => {
+  __setSupabaseSession({ user: { id: 'u1', email: 'marcelotust@gmail.com' }, access_token: 'x' })
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   render(
-    <QueryClientProvider client={qc}>
-      <ScoringConfigEditor />
-    </QueryClientProvider>
+    <AuthProvider>
+      <QueryClientProvider client={qc}>
+        <ScoringConfigEditor />
+      </QueryClientProvider>
+    </AuthProvider>
   )
 }
 

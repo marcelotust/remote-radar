@@ -66,10 +66,14 @@ create policy "sources_anon_insert" on scraping_sources for insert to anon with 
 create policy "sources_anon_update" on scraping_sources for update to anon using (true) with check (true);
 create policy "sources_anon_delete" on scraping_sources for delete to anon using (true);
 
--- Scoring config (issue #43) ------------------------------------------------
--- Weighted keywords + hard vetoes. `user_id` is nullable: null = global/default
--- config. Modeled for future per-user config (filter by user_id, fall back to
--- the global row). `nulls not distinct` keeps a single global row per term.
+-- Scoring config (issue #43, per-user #75) -----------------------------------
+-- Weighted keywords + hard vetoes. `user_id` is nullable: null = the global
+-- default config, read-only from the app. A signed-in user reads their own
+-- rows when they have any, falling back to the global ones (useScoringConfig
+-- resolves this client-side); writes only ever touch their own rows — saving
+-- from the Settings page is what forks a personal copy off the global
+-- default the first time. `nulls not distinct` keeps a single global row per
+-- term.
 create table if not exists scoring_keywords (
   id         uuid primary key default gen_random_uuid(),
   user_id    uuid,
@@ -92,14 +96,16 @@ create table if not exists scoring_settings (
 alter table scoring_keywords enable row level security;
 alter table scoring_settings enable row level security;
 
-create policy "scoring_keywords_anon_read"   on scoring_keywords for select to anon using (true);
-create policy "scoring_keywords_anon_insert" on scoring_keywords for insert to anon with check (true);
-create policy "scoring_keywords_anon_update" on scoring_keywords for update to anon using (true) with check (true);
-create policy "scoring_keywords_anon_delete" on scoring_keywords for delete to anon using (true);
+create policy "scoring_keywords_authenticated_read" on scoring_keywords for select to authenticated
+  using (user_id = auth.uid() or user_id is null);
+create policy "scoring_keywords_own_insert" on scoring_keywords for insert to authenticated with check (user_id = auth.uid());
+create policy "scoring_keywords_own_update" on scoring_keywords for update to authenticated using (user_id = auth.uid()) with check (user_id = auth.uid());
+create policy "scoring_keywords_own_delete" on scoring_keywords for delete to authenticated using (user_id = auth.uid());
 
-create policy "scoring_settings_anon_read"   on scoring_settings for select to anon using (true);
-create policy "scoring_settings_anon_insert" on scoring_settings for insert to anon with check (true);
-create policy "scoring_settings_anon_update" on scoring_settings for update to anon using (true) with check (true);
+create policy "scoring_settings_authenticated_read" on scoring_settings for select to authenticated
+  using (user_id = auth.uid() or user_id is null);
+create policy "scoring_settings_own_insert" on scoring_settings for insert to authenticated with check (user_id = auth.uid());
+create policy "scoring_settings_own_update" on scoring_settings for update to authenticated using (user_id = auth.uid()) with check (user_id = auth.uid());
 
 -- Allowlist + magic-link auth (#71) ------------------------------------------
 -- No UI to manage this yet: add a friend with

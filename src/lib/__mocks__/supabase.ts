@@ -53,10 +53,11 @@ export const __resetSupabaseMock = () => {
 type QueryResult = { data: unknown; error: Error | null }
 
 class QueryBuilder implements PromiseLike<QueryResult> {
-  private op: 'select' | 'insert' | 'update' | 'delete' = 'select'
+  private op: 'select' | 'insert' | 'update' | 'delete' | 'upsert' = 'select'
   private payload: Row | Row[] | null = null
   private filters: Array<[string, unknown]> = []
   private singleRow = false
+  private conflictColumns: string[] = ['id']
 
   constructor(private table: string) {}
 
@@ -77,6 +78,13 @@ class QueryBuilder implements PromiseLike<QueryResult> {
   update(payload: Row) {
     this.op = 'update'
     this.payload = payload
+    return this
+  }
+
+  upsert(payload: Row | Row[], opts?: { onConflict?: string }) {
+    this.op = 'upsert'
+    this.payload = payload
+    if (opts?.onConflict) this.conflictColumns = opts.onConflict.split(',')
     return this
   }
 
@@ -136,6 +144,29 @@ class QueryBuilder implements PromiseLike<QueryResult> {
       case 'delete': {
         db[this.table] = table.filter((r) => !this.matches(r))
         return { data: null, error: null }
+      }
+      case 'upsert': {
+        const rows = Array.isArray(this.payload) ? this.payload : [this.payload as Row]
+        const results = rows.map((incoming) => {
+          const existing = table.find((r) =>
+            this.conflictColumns.every((c) => r[c] === incoming[c])
+          )
+          if (existing) {
+            Object.assign(existing, incoming)
+            return existing
+          }
+          const row: Row = {
+            id: crypto.randomUUID(),
+            created_at: new Date().toISOString(),
+            ...incoming,
+          }
+          table.push(row)
+          return row
+        })
+        return {
+          data: this.singleRow ? structuredClone(results[0] ?? null) : structuredClone(results),
+          error: null,
+        }
       }
       default: {
         const selected = this.filters.length ? table.filter((r) => this.matches(r)) : table
