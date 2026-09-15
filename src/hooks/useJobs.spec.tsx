@@ -1,18 +1,30 @@
 import { renderHook, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 import { useJobs, enrichJobs } from './useJobs'
 import { useUpdateJobStatus } from './useUpdateJobStatus'
 import { useToggleJobRead } from './useToggleJobRead'
 import { useUpdateScoringSettings } from './useScoringConfigMutations'
+import { AuthProvider } from '../contexts/AuthContext'
+import { __setSupabaseSession } from '../lib/__mocks__/supabase'
+import { MOCK_USER_ID } from '../data/mockData'
 import type { Job, Company } from '../types'
 
 const makeWrapper = () => {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return ({ children }: { children: React.ReactNode }) => (
-    <QueryClientProvider client={qc}>{children}</QueryClientProvider>
+    <AuthProvider>
+      <QueryClientProvider client={qc}>{children}</QueryClientProvider>
+    </AuthProvider>
   )
 }
+
+beforeEach(() => {
+  __setSupabaseSession({
+    user: { id: MOCK_USER_ID, email: 'marcelotust@gmail.com' },
+    access_token: 'x',
+  })
+})
 
 describe('useJobs', () => {
   it('returns enriched jobs with relevance_score', async () => {
@@ -62,51 +74,56 @@ describe('useJobs', () => {
 describe('useUpdateJobStatus', () => {
   it('optimistically updates job status in cache', async () => {
     const wrapper = makeWrapper()
-    const { result: jobsResult } = renderHook(() => useJobs(), { wrapper })
-    await waitFor(() => expect(jobsResult.current.isSuccess).toBe(true))
+    // Same tree for both hooks so the mutation sees the session that has
+    // already resolved by the time useJobs succeeds.
+    const { result } = renderHook(() => ({ jobs: useJobs(), update: useUpdateJobStatus() }), {
+      wrapper,
+    })
+    await waitFor(() => expect(result.current.jobs.isSuccess).toBe(true))
 
-    const { result: mutResult } = renderHook(() => useUpdateJobStatus(), { wrapper })
-    mutResult.current.mutate({ id: 'j1', status: 'applied' })
+    result.current.update.mutate({ id: 'j1', status: 'applied' })
 
     await waitFor(() => {
-      const updated = jobsResult.current.data?.find((j) => j.id === 'j1')
+      const updated = result.current.jobs.data?.find((j) => j.id === 'j1')
       expect(updated?.status).toBe('applied')
     })
 
     // onSettled triggers a background invalidate/refetch; the Supabase fake
     // persists the update, so the status stays 'applied' after the refetch.
-    await waitFor(() => expect(mutResult.current.isSuccess).toBe(true))
-    expect(jobsResult.current.data?.find((j) => j.id === 'j1')?.status).toBe('applied')
+    await waitFor(() => expect(result.current.update.isSuccess).toBe(true))
+    expect(result.current.jobs.data?.find((j) => j.id === 'j1')?.status).toBe('applied')
   })
 })
 
 describe('useToggleJobRead', () => {
   it('optimistically marks an unread job as read', async () => {
     const wrapper = makeWrapper()
-    const { result: jobsResult } = renderHook(() => useJobs(), { wrapper })
-    await waitFor(() => expect(jobsResult.current.isSuccess).toBe(true))
-    expect(jobsResult.current.data?.find((j) => j.id === 'j1')?.read).toBe(false)
+    const { result } = renderHook(() => ({ jobs: useJobs(), toggle: useToggleJobRead() }), {
+      wrapper,
+    })
+    await waitFor(() => expect(result.current.jobs.isSuccess).toBe(true))
+    expect(result.current.jobs.data?.find((j) => j.id === 'j1')?.read).toBe(false)
 
-    const { result: mutResult } = renderHook(() => useToggleJobRead(), { wrapper })
-    mutResult.current.mutate({ id: 'j1', read: true })
+    result.current.toggle.mutate({ id: 'j1', read: true })
 
     await waitFor(() => {
-      const updated = jobsResult.current.data?.find((j) => j.id === 'j1')
+      const updated = result.current.jobs.data?.find((j) => j.id === 'j1')
       expect(updated?.read).toBe(true)
     })
   })
 
   it('can mark a read job as unread', async () => {
     const wrapper = makeWrapper()
-    const { result: jobsResult } = renderHook(() => useJobs(), { wrapper })
-    await waitFor(() => expect(jobsResult.current.isSuccess).toBe(true))
-    expect(jobsResult.current.data?.find((j) => j.id === 'j3')?.read).toBe(true)
+    const { result } = renderHook(() => ({ jobs: useJobs(), toggle: useToggleJobRead() }), {
+      wrapper,
+    })
+    await waitFor(() => expect(result.current.jobs.isSuccess).toBe(true))
+    expect(result.current.jobs.data?.find((j) => j.id === 'j3')?.read).toBe(true)
 
-    const { result: mutResult } = renderHook(() => useToggleJobRead(), { wrapper })
-    mutResult.current.mutate({ id: 'j3', read: false })
+    result.current.toggle.mutate({ id: 'j3', read: false })
 
     await waitFor(() => {
-      const updated = jobsResult.current.data?.find((j) => j.id === 'j3')
+      const updated = result.current.jobs.data?.find((j) => j.id === 'j3')
       expect(updated?.read).toBe(false)
     })
   })

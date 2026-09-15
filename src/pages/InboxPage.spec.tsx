@@ -1,22 +1,34 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 import { UIProvider } from '../contexts/UIContext'
 import { InboxPage } from './InboxPage'
 import userEvent from '@testing-library/user-event'
 import { supabase } from '../lib/supabase'
+import { AuthProvider } from '../contexts/AuthContext'
+import { __setSupabaseSession } from '../lib/__mocks__/supabase'
+import { MOCK_USER_ID } from '../data/mockData'
 
 const makeWrapper = () => {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return ({ children }: { children: React.ReactNode }) => (
-    <QueryClientProvider client={qc}>
-      <UIProvider>
-        <MemoryRouter>{children}</MemoryRouter>
-      </UIProvider>
-    </QueryClientProvider>
+    <AuthProvider>
+      <QueryClientProvider client={qc}>
+        <UIProvider>
+          <MemoryRouter>{children}</MemoryRouter>
+        </UIProvider>
+      </QueryClientProvider>
+    </AuthProvider>
   )
 }
+
+beforeEach(() => {
+  __setSupabaseSession({
+    user: { id: MOCK_USER_ID, email: 'marcelotust@gmail.com' },
+    access_token: 'x',
+  })
+})
 
 describe('InboxPage', () => {
   it('renders FilterBar', () => {
