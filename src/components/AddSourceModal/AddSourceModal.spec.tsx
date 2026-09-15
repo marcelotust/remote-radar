@@ -3,15 +3,18 @@ import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { describe, it, expect } from 'vitest'
 import { UIProvider, useUIContext } from '../../contexts/UIContext'
+import { AuthProvider } from '../../contexts/AuthContext'
 import { AddSourceModal } from './AddSourceModal'
 import type { ScrapingSource } from '../../types'
 
 const makeWrapper = () => {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return ({ children }: { children: React.ReactNode }) => (
-    <QueryClientProvider client={qc}>
-      <UIProvider>{children}</UIProvider>
-    </QueryClientProvider>
+    <AuthProvider>
+      <QueryClientProvider client={qc}>
+        <UIProvider>{children}</UIProvider>
+      </QueryClientProvider>
+    </AuthProvider>
   )
 }
 

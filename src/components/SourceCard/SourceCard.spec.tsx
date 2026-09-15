@@ -1,9 +1,11 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { describe, it, expect } from 'vitest'
 import { SourceCard } from './SourceCard'
 import { UIProvider } from '../../contexts/UIContext'
+import { AuthProvider } from '../../contexts/AuthContext'
+import { __setSupabaseSession } from '../../lib/__mocks__/supabase'
 import type { ScrapingSource } from '../../types'
 
 const source: ScrapingSource = {
@@ -17,9 +19,11 @@ const source: ScrapingSource = {
 const makeWrapper = () => {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return ({ children }: { children: React.ReactNode }) => (
-    <QueryClientProvider client={qc}>
-      <UIProvider>{children}</UIProvider>
-    </QueryClientProvider>
+    <AuthProvider>
+      <QueryClientProvider client={qc}>
+        <UIProvider>{children}</UIProvider>
+      </QueryClientProvider>
+    </AuthProvider>
   )
 }
 
@@ -96,5 +100,30 @@ describe('SourceCard', () => {
     render(<SourceCard source={failed} />, { wrapper: makeWrapper() })
     const line = screen.getByText(/falhou/)
     expect(line).toHaveAttribute('title', 'render timeout')
+  })
+
+  it('shows the edit/delete buttons for a legacy source with no owner', () => {
+    render(<SourceCard source={source} />, { wrapper: makeWrapper() })
+    expect(screen.getByRole('button', { name: /editar/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /excluir/i })).toBeInTheDocument()
+  })
+
+  it('shows the edit/delete buttons when the current user created the source', async () => {
+    __setSupabaseSession({ user: { id: 'u1', email: 'me@example.com' }, access_token: 'x' })
+    const owned = { ...source, created_by: 'u1', created_by_email: 'me@example.com' }
+    render(<SourceCard source={owned} />, { wrapper: makeWrapper() })
+    await waitFor(() => expect(screen.getByRole('button', { name: /editar/i })).toBeInTheDocument())
+    expect(screen.getByText('adicionado por me@example.com')).toBeInTheDocument()
+  })
+
+  it('hides the edit/delete buttons when another user created the source', async () => {
+    __setSupabaseSession({ user: { id: 'u1', email: 'me@example.com' }, access_token: 'x' })
+    const owned = { ...source, created_by: 'u2', created_by_email: 'amigo@example.com' }
+    render(<SourceCard source={owned} />, { wrapper: makeWrapper() })
+    await waitFor(() =>
+      expect(screen.getByText('adicionado por amigo@example.com')).toBeInTheDocument()
+    )
+    expect(screen.queryByRole('button', { name: /editar/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /excluir/i })).not.toBeInTheDocument()
   })
 })
