@@ -2,6 +2,10 @@
 -- Run this in the Supabase SQL editor for a fresh project.
 -- Status model reflects issue #7: `status` is user-action only (none/applied/
 -- dismissed) and read/unread is a separate `read` boolean column.
+-- `jobs.status`/`jobs.read` below are vestigial (#74): status/read are now
+-- tracked per user in `job_user_state`, further down. Kept on a fresh install
+-- only so the column defaults still exist; see 0009/0010 in migrations/ for
+-- how an existing database transitions off them.
 
 create table if not exists jobs (
   id          uuid primary key default gen_random_uuid(),
@@ -20,6 +24,24 @@ create table if not exists jobs (
   relevance_level text
               check (relevance_level in ('high', 'medium', 'low', 'negative'))
 );
+
+-- Per-user job status/read (#74). Shared job list, independent tracking.
+create table if not exists job_user_state (
+  id         uuid primary key default gen_random_uuid(),
+  user_id    uuid not null references auth.users(id),
+  job_id     uuid not null references jobs(id) on delete cascade,
+  status     text not null default 'none'
+             check (status in ('none', 'applied', 'dismissed')),
+  read       boolean not null default false,
+  created_at timestamptz default now(),
+  unique (user_id, job_id)
+);
+
+alter table job_user_state enable row level security;
+
+create policy "job_user_state_own_read"   on job_user_state for select to authenticated using (user_id = auth.uid());
+create policy "job_user_state_own_insert" on job_user_state for insert to authenticated with check (user_id = auth.uid());
+create policy "job_user_state_own_update" on job_user_state for update to authenticated using (user_id = auth.uid()) with check (user_id = auth.uid());
 
 create table if not exists companies (
   id            uuid primary key default gen_random_uuid(),

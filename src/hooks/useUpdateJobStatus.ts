@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
+import { useAuth } from '../contexts/AuthContext'
 import { JOBS_KEY } from './useJobs'
 import type { Job, JobStatus } from '../types'
 
@@ -10,12 +11,15 @@ interface UpdatePayload {
 
 export const useUpdateJobStatus = () => {
   const qc = useQueryClient()
+  const { user } = useAuth()
   return useMutation({
     mutationFn: async (payload: UpdatePayload): Promise<UpdatePayload> => {
       const { error } = await supabase
-        .from('jobs')
-        .update({ status: payload.status })
-        .eq('id', payload.id)
+        .from('job_user_state')
+        .upsert(
+          { user_id: user!.id, job_id: payload.id, status: payload.status },
+          { onConflict: 'user_id,job_id' }
+        )
       if (error) throw error
       return payload
     },

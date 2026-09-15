@@ -21,6 +21,15 @@ export interface Job {
   wishlist_remote_brazil?: RemoteBrazilStatus
 }
 
+export interface JobUserState {
+  id: string
+  user_id: string
+  job_id: string
+  status: JobStatus
+  read: boolean
+  created_at: string
+}
+
 export interface Company {
   id: string
   name: string
