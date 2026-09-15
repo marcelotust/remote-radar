@@ -8,7 +8,6 @@ export const applyFilters = (jobs: Job[], filters: FilterState): Job[] =>
       return false
     }
     if (filters.relevance !== 'all' && job.relevance_level !== filters.relevance) return false
-    if (filters.wishlistOnly && !job.is_wishlist_company) return false
     if (filters.unreadOnly && job.read) return false
     return true
   })

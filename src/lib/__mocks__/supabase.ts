@@ -1,6 +1,5 @@
 import {
   MOCK_JOBS,
-  MOCK_COMPANIES,
   MOCK_SOURCES,
   MOCK_SCORING_KEYWORDS,
   MOCK_SCORING_SETTINGS,
@@ -17,7 +16,6 @@ type Row = Record<string, unknown>
 
 const seed = (): Record<string, Row[]> => ({
   jobs: structuredClone(MOCK_JOBS) as unknown as Row[],
-  companies: structuredClone(MOCK_COMPANIES) as unknown as Row[],
   scraping_sources: structuredClone(MOCK_SOURCES) as unknown as Row[],
   scoring_keywords: structuredClone(MOCK_SCORING_KEYWORDS) as unknown as Row[],
   scoring_settings: structuredClone(MOCK_SCORING_SETTINGS) as unknown as Row[],

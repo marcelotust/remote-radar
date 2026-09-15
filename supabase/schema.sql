@@ -43,16 +43,6 @@ create policy "job_user_state_own_read"   on job_user_state for select to authen
 create policy "job_user_state_own_insert" on job_user_state for insert to authenticated with check (user_id = auth.uid());
 create policy "job_user_state_own_update" on job_user_state for update to authenticated using (user_id = auth.uid()) with check (user_id = auth.uid());
 
-create table if not exists companies (
-  id            uuid primary key default gen_random_uuid(),
-  name          text not null,
-  website       text,
-  notes         text,
-  remote_brazil text not null default 'unknown'
-                check (remote_brazil in ('unknown', 'yes', 'no')),
-  created_at    timestamptz default now()
-);
-
 create table if not exists scraping_sources (
   id                  uuid primary key default gen_random_uuid(),
   url                 text not null unique,
@@ -70,20 +60,13 @@ create table if not exists scraping_sources (
 -- key alone can't read or write anything past the allowlist RPC below. Policy
 -- intent:
 --   jobs              → authenticated read + update (status / read toggles)
---   companies         → anon read + write (wishlist CRUD) — table removed (#76)
 --   scraping_sources  → authenticated read + write (source CRUD)
 
 alter table jobs enable row level security;
-alter table companies enable row level security;
 alter table scraping_sources enable row level security;
 
 create policy "jobs_authenticated_read"   on jobs for select to authenticated using (true);
 create policy "jobs_authenticated_update" on jobs for update to authenticated using (true) with check (true);
-
-create policy "companies_anon_read"   on companies for select to anon using (true);
-create policy "companies_anon_insert" on companies for insert to anon with check (true);
-create policy "companies_anon_update" on companies for update to anon using (true) with check (true);
-create policy "companies_anon_delete" on companies for delete to anon using (true);
 
 create policy "sources_authenticated_read"   on scraping_sources for select to authenticated using (true);
 create policy "sources_authenticated_insert" on scraping_sources for insert to authenticated with check (true);

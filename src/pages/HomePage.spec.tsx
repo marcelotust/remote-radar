@@ -56,13 +56,11 @@ describe('HomePage', () => {
       })
       .select()
       .single()
-    await supabase
-      .from('job_user_state')
-      .insert({
-        user_id: MOCK_USER_ID,
-        job_id: (inserted as { id: string }).id,
-        status: 'dismissed',
-      })
+    await supabase.from('job_user_state').insert({
+      user_id: MOCK_USER_ID,
+      job_id: (inserted as { id: string }).id,
+      status: 'dismissed',
+    })
     render(<HomePage />, { wrapper: makeWrapper() })
     await waitFor(() => {
       expect(screen.getByText('Senior Frontend Engineer')).toBeInTheDocument()

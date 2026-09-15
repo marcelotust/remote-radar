@@ -1,46 +1,12 @@
 // Test-only seed data. The app fetches from Supabase at runtime (see
 // src/lib/supabase.ts); these fixtures back the in-memory Supabase fake used in
 // tests (src/lib/__mocks__/supabase.ts).
-import type {
-  Job,
-  Company,
-  ScrapingSource,
-  ScoringKeyword,
-  ScoringSettings,
-  JobUserState,
-} from '../types'
+import type { Job, ScrapingSource, ScoringKeyword, ScoringSettings, JobUserState } from '../types'
 import { DEFAULT_SCORING_CONFIG } from '../utils/keywords'
 
 export const MOCK_USER_ID = 'u1'
 
 export const MOCK_ALLOWED_USERS: { email: string }[] = [{ email: 'marcelotust@gmail.com' }]
-
-export const MOCK_COMPANIES: Company[] = [
-  {
-    id: 'c1',
-    name: 'Stripe',
-    website: 'https://stripe.com',
-    notes: 'Strong eng culture, fully remote',
-    remote_brazil: 'yes',
-    created_at: '2026-06-01T00:00:00Z',
-  },
-  {
-    id: 'c2',
-    name: 'Cloudflare',
-    website: 'https://cloudflare.com',
-    notes: null,
-    remote_brazil: 'unknown',
-    created_at: '2026-06-05T00:00:00Z',
-  },
-  {
-    id: 'c3',
-    name: 'Acme Corp',
-    website: null,
-    notes: 'Only hires US-based',
-    remote_brazil: 'no',
-    created_at: '2026-06-10T00:00:00Z',
-  },
-]
 
 const SOURCE_SEED: { label: string; url: string }[] = [
   // Existentes

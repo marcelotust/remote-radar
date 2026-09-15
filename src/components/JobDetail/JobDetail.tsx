@@ -1,5 +1,4 @@
 import { ScoreBadge } from '../ScoreBadge/ScoreBadge'
-import { RemoteBrazilBadge } from '../RemoteBrazilBadge/RemoteBrazilBadge'
 import { StatusDropdown } from '../StatusDropdown/StatusDropdown'
 import { NetworkingButton } from '../NetworkingButton/NetworkingButton'
 import { useUpdateJobStatus } from '../../hooks/useUpdateJobStatus'
@@ -23,9 +22,6 @@ export const JobDetail = ({ job }: Props) => {
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center gap-2">
         {job.relevance_level && <ScoreBadge level={job.relevance_level} />}
-        {job.is_wishlist_company && job.wishlist_remote_brazil && (
-          <RemoteBrazilBadge status={job.wishlist_remote_brazil} />
-        )}
       </div>
 
       <div>
