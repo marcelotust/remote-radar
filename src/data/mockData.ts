@@ -1,8 +1,12 @@
 // Test-only seed data. The app fetches from Supabase at runtime (see
 // src/lib/supabase.ts); these fixtures back the in-memory Supabase fake used in
 // tests (src/lib/__mocks__/supabase.ts).
-import type { Job, ScrapingSource, ScoringKeyword, ScoringSettings } from '../types'
+import type { Job, ScrapingSource, ScoringKeyword, ScoringSettings, JobUserState } from '../types'
 import { DEFAULT_SCORING_CONFIG } from '../utils/keywords'
+
+export const MOCK_USER_ID = 'u1'
+
+export const MOCK_ALLOWED_USERS: { email: string }[] = [{ email: 'marcelotust@gmail.com' }]
 
 const SOURCE_SEED: { label: string; url: string }[] = [
   // Existentes
@@ -126,5 +130,18 @@ export const MOCK_JOBS: Job[] = [
     status: 'none',
     read: true,
     source_url: 'https://jobs.lever.co',
+  },
+]
+
+// Per-user status/read (#74). Only rows that differ from the defaults
+// (status: 'none', read: false) need an entry — j1/j2 have none.
+export const MOCK_JOB_USER_STATE: JobUserState[] = [
+  {
+    id: 'jus1',
+    user_id: MOCK_USER_ID,
+    job_id: 'j3',
+    status: 'none',
+    read: true,
+    created_at: '2026-06-01T00:00:00Z',
   },
 ]

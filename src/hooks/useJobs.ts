@@ -4,7 +4,8 @@ import { computeRelevanceScore } from '../utils/scoring'
 import { DEFAULT_SCORING_CONFIG } from '../utils/keywords'
 import type { ScoringConfig } from '../types'
 import { useScoringConfig } from './useScoringConfig'
-import type { Job } from '../types'
+import { useAuth } from '../contexts/AuthContext'
+import type { Job, JobUserState } from '../types'
 
 export const JOBS_KEY = ['jobs'] as const
 
@@ -25,15 +26,27 @@ export const enrichJobs = (rawJobs: Job[], config: ScoringConfig = DEFAULT_SCORI
     })
 
 export const useJobs = () => {
+  const { user } = useAuth()
   const { data: scoringConfig = DEFAULT_SCORING_CONFIG } = useScoringConfig()
 
   return useQuery<Job[]>({
     queryKey: JOBS_KEY,
     queryFn: async () => {
-      const { data, error } = await supabase.from('jobs').select('*')
-      if (error) throw error
-      return data as Job[]
+      const userId = user!.id
+      const [jobsRes, stateRes] = await Promise.all([
+        supabase.from('jobs').select('*'),
+        supabase.from('job_user_state').select('*').eq('user_id', userId),
+      ])
+      if (jobsRes.error) throw jobsRes.error
+      if (stateRes.error) throw stateRes.error
+
+      const stateByJobId = new Map((stateRes.data as JobUserState[]).map((s) => [s.job_id, s]))
+      return (jobsRes.data as Job[]).map((job) => {
+        const state = stateByJobId.get(job.id)
+        return { ...job, status: state?.status ?? 'none', read: state?.read ?? false }
+      })
     },
     select: (rawJobs) => enrichJobs(rawJobs, scoringConfig),
+    enabled: !!user,
   })
 }

@@ -18,6 +18,15 @@ export interface Job {
   matched_keywords?: string[]
 }
 
+export interface JobUserState {
+  id: string
+  user_id: string
+  job_id: string
+  status: JobStatus
+  read: boolean
+  created_at: string
+}
+
 export interface ScrapingSource {
   id: string
   url: string

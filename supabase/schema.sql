@@ -2,6 +2,10 @@
 -- Run this in the Supabase SQL editor for a fresh project.
 -- Status model reflects issue #7: `status` is user-action only (none/applied/
 -- dismissed) and read/unread is a separate `read` boolean column.
+-- `jobs.status`/`jobs.read` below are vestigial (#74): status/read are now
+-- tracked per user in `job_user_state`, further down. Kept on a fresh install
+-- only so the column defaults still exist; see 0009/0010 in migrations/ for
+-- how an existing database transitions off them.
 
 create table if not exists jobs (
   id          uuid primary key default gen_random_uuid(),
@@ -21,6 +25,24 @@ create table if not exists jobs (
               check (relevance_level in ('high', 'medium', 'low', 'negative'))
 );
 
+-- Per-user job status/read (#74). Shared job list, independent tracking.
+create table if not exists job_user_state (
+  id         uuid primary key default gen_random_uuid(),
+  user_id    uuid not null references auth.users(id),
+  job_id     uuid not null references jobs(id) on delete cascade,
+  status     text not null default 'none'
+             check (status in ('none', 'applied', 'dismissed')),
+  read       boolean not null default false,
+  created_at timestamptz default now(),
+  unique (user_id, job_id)
+);
+
+alter table job_user_state enable row level security;
+
+create policy "job_user_state_own_read"   on job_user_state for select to authenticated using (user_id = auth.uid());
+create policy "job_user_state_own_insert" on job_user_state for insert to authenticated with check (user_id = auth.uid());
+create policy "job_user_state_own_update" on job_user_state for update to authenticated using (user_id = auth.uid()) with check (user_id = auth.uid());
+
 create table if not exists scraping_sources (
   id                  uuid primary key default gen_random_uuid(),
   url                 text not null unique,
@@ -34,20 +56,22 @@ create table if not exists scraping_sources (
 );
 
 -- Row Level Security ---------------------------------------------------------
--- The app uses the anon key from the browser. Policy intent:
---   jobs              → anon read + update (status / read toggles)
---   scraping_sources  → anon read + write (source CRUD)
+-- The browser client only ever holds a signed-in session (see #71); the anon
+-- key alone can't read or write anything past the allowlist RPC below. Policy
+-- intent:
+--   jobs              → authenticated read + update (status / read toggles)
+--   scraping_sources  → authenticated read + write (source CRUD)
 
 alter table jobs enable row level security;
 alter table scraping_sources enable row level security;
 
-create policy "jobs_anon_read"   on jobs for select to anon using (true);
-create policy "jobs_anon_update" on jobs for update to anon using (true) with check (true);
+create policy "jobs_authenticated_read"   on jobs for select to authenticated using (true);
+create policy "jobs_authenticated_update" on jobs for update to authenticated using (true) with check (true);
 
-create policy "sources_anon_read"   on scraping_sources for select to anon using (true);
-create policy "sources_anon_insert" on scraping_sources for insert to anon with check (true);
-create policy "sources_anon_update" on scraping_sources for update to anon using (true) with check (true);
-create policy "sources_anon_delete" on scraping_sources for delete to anon using (true);
+create policy "sources_authenticated_read"   on scraping_sources for select to authenticated using (true);
+create policy "sources_authenticated_insert" on scraping_sources for insert to authenticated with check (true);
+create policy "sources_authenticated_update" on scraping_sources for update to authenticated using (true) with check (true);
+create policy "sources_authenticated_delete" on scraping_sources for delete to authenticated using (true);
 
 -- Scoring config (issue #43) ------------------------------------------------
 -- Weighted keywords + hard vetoes. `user_id` is nullable: null = global/default
@@ -75,14 +99,39 @@ create table if not exists scoring_settings (
 alter table scoring_keywords enable row level security;
 alter table scoring_settings enable row level security;
 
-create policy "scoring_keywords_anon_read"   on scoring_keywords for select to anon using (true);
-create policy "scoring_keywords_anon_insert" on scoring_keywords for insert to anon with check (true);
-create policy "scoring_keywords_anon_update" on scoring_keywords for update to anon using (true) with check (true);
-create policy "scoring_keywords_anon_delete" on scoring_keywords for delete to anon using (true);
+create policy "scoring_keywords_authenticated_read"   on scoring_keywords for select to authenticated using (true);
+create policy "scoring_keywords_authenticated_insert" on scoring_keywords for insert to authenticated with check (true);
+create policy "scoring_keywords_authenticated_update" on scoring_keywords for update to authenticated using (true) with check (true);
+create policy "scoring_keywords_authenticated_delete" on scoring_keywords for delete to authenticated using (true);
 
-create policy "scoring_settings_anon_read"   on scoring_settings for select to anon using (true);
-create policy "scoring_settings_anon_insert" on scoring_settings for insert to anon with check (true);
-create policy "scoring_settings_anon_update" on scoring_settings for update to anon using (true) with check (true);
+create policy "scoring_settings_authenticated_read"   on scoring_settings for select to authenticated using (true);
+create policy "scoring_settings_authenticated_insert" on scoring_settings for insert to authenticated with check (true);
+create policy "scoring_settings_authenticated_update" on scoring_settings for update to authenticated using (true) with check (true);
+
+-- Allowlist + magic-link auth (#71) ------------------------------------------
+-- No UI to manage this yet: add a friend with
+--   insert into allowed_users (email) values ('amigo@example.com');
+create table if not exists allowed_users (
+  email      text primary key,
+  created_at timestamptz default now()
+);
+
+alter table allowed_users enable row level security;
+-- No select policy: the table is never read directly by any client role,
+-- only through the security-definer RPC below (keeps the email list private).
+
+create or replace function is_email_allowed(check_email text)
+returns boolean
+language sql
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1 from allowed_users where email = lower(check_email)
+  );
+$$;
+
+grant execute on function is_email_allowed(text) to anon, authenticated;
 
 -- Default global config seed.
 insert into scoring_settings (user_id, high_threshold, medium_threshold)

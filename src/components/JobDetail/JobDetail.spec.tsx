@@ -2,12 +2,15 @@ import { render, screen } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { describe, it, expect } from 'vitest'
 import { JobDetail } from './JobDetail'
+import { AuthProvider } from '../../contexts/AuthContext'
 import type { Job } from '../../types'
 
 const makeWrapper = () => {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return ({ children }: { children: React.ReactNode }) => (
-    <QueryClientProvider client={qc}>{children}</QueryClientProvider>
+    <AuthProvider>
+      <QueryClientProvider client={qc}>{children}</QueryClientProvider>
+    </AuthProvider>
   )
 }
 

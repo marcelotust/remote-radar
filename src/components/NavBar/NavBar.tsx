@@ -1,4 +1,5 @@
 import { NavLink } from 'react-router-dom'
+import { useAuth } from '../../contexts/AuthContext'
 
 const links = [
   { to: '/', label: 'Início', end: true },
@@ -7,20 +8,30 @@ const links = [
   { to: '/settings', label: 'Ajustes', end: false },
 ]
 
-export const NavBar = () => (
-  <nav className="flex flex-wrap items-center gap-6 px-6 py-4 bg-brand-bg border-b border-brand-gray/20">
-    <span className="text-white font-bold text-lg tracking-tight">Remote Radar</span>
-    {links.map(({ to, label, end }) => (
-      <NavLink
-        key={to}
-        to={to}
-        end={end}
-        className={({ isActive }) =>
-          `text-sm font-medium transition-all duration-300 ${isActive ? 'text-brand-green' : 'text-gray-400 hover:text-white'}`
-        }
+export const NavBar = () => {
+  const { signOut } = useAuth()
+
+  return (
+    <nav className="flex flex-wrap items-center gap-6 px-6 py-4 bg-brand-bg border-b border-brand-gray/20">
+      <span className="text-white font-bold text-lg tracking-tight">Remote Radar</span>
+      {links.map(({ to, label, end }) => (
+        <NavLink
+          key={to}
+          to={to}
+          end={end}
+          className={({ isActive }) =>
+            `text-sm font-medium transition-all duration-300 ${isActive ? 'text-brand-green' : 'text-gray-400 hover:text-white'}`
+          }
+        >
+          {label}
+        </NavLink>
+      ))}
+      <button
+        onClick={() => signOut()}
+        className="ml-auto text-sm font-medium text-gray-400 hover:text-white"
       >
-        {label}
-      </NavLink>
-    ))}
-  </nav>
-)
+        Sair
+      </button>
+    </nav>
+  )
+}
