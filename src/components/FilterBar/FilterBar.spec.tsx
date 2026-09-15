@@ -22,11 +22,6 @@ describe('FilterBar', () => {
     expect(screen.getByLabelText(/relevância/i)).toBeInTheDocument()
   })
 
-  it('renders wishlist only toggle', () => {
-    renderFilterBar()
-    expect(screen.getByLabelText(/wishlist/i)).toBeInTheDocument()
-  })
-
   it('renders unread only toggle', () => {
     renderFilterBar()
     expect(screen.getByLabelText(/não lidas/i)).toBeInTheDocument()
@@ -51,12 +46,5 @@ describe('FilterBar', () => {
     await userEvent.click(screen.getByLabelText(/relevância/i))
     await userEvent.click(screen.getByRole('option', { name: 'Alta' }))
     expect(screen.getByLabelText(/relevância/i)).toHaveTextContent('Alta')
-  })
-
-  it('updates context when wishlist toggle changes', async () => {
-    renderFilterBar()
-    const checkbox = screen.getByLabelText(/wishlist/i)
-    await userEvent.click(checkbox)
-    expect(checkbox).toBeChecked()
   })
 })

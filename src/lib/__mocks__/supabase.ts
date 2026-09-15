@@ -1,10 +1,10 @@
 import {
   MOCK_JOBS,
-  MOCK_COMPANIES,
   MOCK_SOURCES,
   MOCK_SCORING_KEYWORDS,
   MOCK_SCORING_SETTINGS,
   MOCK_ALLOWED_USERS,
+  MOCK_JOB_USER_STATE,
 } from '../../data/mockData'
 
 // In-memory fake of the Supabase client used in tests. It mimics the subset of
@@ -16,11 +16,11 @@ type Row = Record<string, unknown>
 
 const seed = (): Record<string, Row[]> => ({
   jobs: structuredClone(MOCK_JOBS) as unknown as Row[],
-  companies: structuredClone(MOCK_COMPANIES) as unknown as Row[],
   scraping_sources: structuredClone(MOCK_SOURCES) as unknown as Row[],
   scoring_keywords: structuredClone(MOCK_SCORING_KEYWORDS) as unknown as Row[],
   scoring_settings: structuredClone(MOCK_SCORING_SETTINGS) as unknown as Row[],
   allowed_users: structuredClone(MOCK_ALLOWED_USERS) as unknown as Row[],
+  job_user_state: structuredClone(MOCK_JOB_USER_STATE) as unknown as Row[],
 })
 
 let db: Record<string, Row[]> = seed()

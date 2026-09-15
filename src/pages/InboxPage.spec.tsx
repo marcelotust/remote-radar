@@ -8,6 +8,7 @@ import userEvent from '@testing-library/user-event'
 import { supabase } from '../lib/supabase'
 import { AuthProvider } from '../contexts/AuthContext'
 import { __setSupabaseSession } from '../lib/__mocks__/supabase'
+import { MOCK_USER_ID } from '../data/mockData'
 
 const makeWrapper = () => {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
@@ -23,7 +24,10 @@ const makeWrapper = () => {
 }
 
 beforeEach(() => {
-  __setSupabaseSession({ user: { id: 'u1', email: 'marcelotust@gmail.com' }, access_token: 'x' })
+  __setSupabaseSession({
+    user: { id: MOCK_USER_ID, email: 'marcelotust@gmail.com' },
+    access_token: 'x',
+  })
 })
 
 describe('InboxPage', () => {

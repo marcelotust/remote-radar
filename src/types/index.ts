@@ -1,5 +1,4 @@
 export type JobStatus = 'none' | 'applied' | 'dismissed'
-export type RemoteBrazilStatus = 'unknown' | 'yes' | 'no'
 export type RelevanceLevel = 'high' | 'medium' | 'low' | 'negative'
 
 export interface Job {
@@ -17,16 +16,14 @@ export interface Job {
   relevance_score?: number
   relevance_level?: RelevanceLevel
   matched_keywords?: string[]
-  is_wishlist_company?: boolean
-  wishlist_remote_brazil?: RemoteBrazilStatus
 }
 
-export interface Company {
+export interface JobUserState {
   id: string
-  name: string
-  website: string | null
-  notes: string | null
-  remote_brazil: RemoteBrazilStatus
+  user_id: string
+  job_id: string
+  status: JobStatus
+  read: boolean
   created_at: string
 }
 
@@ -36,6 +33,8 @@ export interface ScrapingSource {
   label: string
   is_active: boolean
   created_at: string
+  created_by?: string | null
+  created_by_email?: string | null
   last_run_at?: string | null
   last_run_jobs_added?: number | null
   last_run_status?: 'success' | 'error' | null
@@ -74,6 +73,5 @@ export type RelevanceFilter = 'all' | RelevanceLevel
 export interface FilterState {
   status: StatusFilter
   relevance: RelevanceFilter
-  wishlistOnly: boolean
   unreadOnly: boolean
 }

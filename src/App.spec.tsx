@@ -1,12 +1,5 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import { describe, it, expect } from 'vitest'
-import { MemoryRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { AuthProvider } from './contexts/AuthContext'
-import { UIProvider } from './contexts/UIContext'
-import { Layout } from './components/Layout/Layout'
-import { HomePage } from './pages/HomePage'
-import { CompaniesPage } from './pages/CompaniesPage'
 import { App } from './App'
 import { __setSupabaseSession } from './lib/__mocks__/supabase'
 
@@ -28,28 +21,10 @@ describe('App', () => {
     )
   })
 
-  it('redirects /wishlist to /companies', async () => {
+  it('redirects unknown routes to /', async () => {
     signIn()
-    const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-    render(
-      <AuthProvider>
-        <QueryClientProvider client={qc}>
-          <UIProvider>
-            <MemoryRouter initialEntries={['/wishlist']}>
-              <Routes>
-                <Route element={<Layout />}>
-                  <Route path="/" element={<HomePage />} />
-                  <Route path="/companies" element={<CompaniesPage />} />
-                  <Route path="/wishlist" element={<Navigate to="/companies" replace />} />
-                </Route>
-              </Routes>
-            </MemoryRouter>
-          </UIProvider>
-        </QueryClientProvider>
-      </AuthProvider>
-    )
-    await waitFor(() =>
-      expect(screen.getByRole('button', { name: /adicionar empresa/i })).toBeInTheDocument()
-    )
+    window.history.pushState({}, '', '/some-unknown-route')
+    render(<App />)
+    await waitFor(() => expect(screen.getByText(/vagas novas no último dia/i)).toBeInTheDocument())
   })
 })

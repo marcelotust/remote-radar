@@ -22,18 +22,17 @@ const renderAt = (path: string) =>
   )
 
 describe('NavBar', () => {
-  it('renders all five navigation links', () => {
+  it('renders all four navigation links', () => {
     renderAt('/')
     expect(screen.getByRole('link', { name: 'Início' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Caixa' })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Empresas' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Fontes' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Ajustes' })).toBeInTheDocument()
   })
 
   it('marks the active link with the brand-green class', () => {
-    renderAt('/companies')
-    expect(screen.getByRole('link', { name: 'Empresas' }).className).toContain('text-brand-green')
+    renderAt('/scraping-sources')
+    expect(screen.getByRole('link', { name: 'Fontes' }).className).toContain('text-brand-green')
     expect(screen.getByRole('link', { name: 'Início' }).className).not.toContain('text-brand-green')
   })
 

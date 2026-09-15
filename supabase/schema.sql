@@ -2,6 +2,10 @@
 -- Run this in the Supabase SQL editor for a fresh project.
 -- Status model reflects issue #7: `status` is user-action only (none/applied/
 -- dismissed) and read/unread is a separate `read` boolean column.
+-- `jobs.status`/`jobs.read` below are vestigial (#74): status/read are now
+-- tracked per user in `job_user_state`, further down. Kept on a fresh install
+-- only so the column defaults still exist; see 0009/0010 in migrations/ for
+-- how an existing database transitions off them.
 
 create table if not exists jobs (
   id          uuid primary key default gen_random_uuid(),
@@ -21,15 +25,23 @@ create table if not exists jobs (
               check (relevance_level in ('high', 'medium', 'low', 'negative'))
 );
 
-create table if not exists companies (
-  id            uuid primary key default gen_random_uuid(),
-  name          text not null,
-  website       text,
-  notes         text,
-  remote_brazil text not null default 'unknown'
-                check (remote_brazil in ('unknown', 'yes', 'no')),
-  created_at    timestamptz default now()
+-- Per-user job status/read (#74). Shared job list, independent tracking.
+create table if not exists job_user_state (
+  id         uuid primary key default gen_random_uuid(),
+  user_id    uuid not null references auth.users(id),
+  job_id     uuid not null references jobs(id) on delete cascade,
+  status     text not null default 'none'
+             check (status in ('none', 'applied', 'dismissed')),
+  read       boolean not null default false,
+  created_at timestamptz default now(),
+  unique (user_id, job_id)
 );
+
+alter table job_user_state enable row level security;
+
+create policy "job_user_state_own_read"   on job_user_state for select to authenticated using (user_id = auth.uid());
+create policy "job_user_state_own_insert" on job_user_state for insert to authenticated with check (user_id = auth.uid());
+create policy "job_user_state_own_update" on job_user_state for update to authenticated using (user_id = auth.uid()) with check (user_id = auth.uid());
 
 create table if not exists scraping_sources (
   id                  uuid primary key default gen_random_uuid(),
@@ -37,6 +49,8 @@ create table if not exists scraping_sources (
   label               text not null,
   is_active           boolean not null default true,
   created_at          timestamptz default now(),
+  created_by          uuid references auth.users(id),
+  created_by_email    text,
   last_run_at         timestamptz,
   last_run_jobs_added int,
   last_run_status     text check (last_run_status in ('success', 'error')),
@@ -44,27 +58,29 @@ create table if not exists scraping_sources (
 );
 
 -- Row Level Security ---------------------------------------------------------
--- The app uses the anon key from the browser. Policy intent:
---   jobs              → anon read + update (status / read toggles)
---   companies         → anon read + write (wishlist CRUD)
---   scraping_sources  → anon read + write (source CRUD)
+-- The browser client only ever holds a signed-in session (see #71); the anon
+-- key alone can't read or write anything past the allowlist RPC below. Policy
+-- intent:
+--   jobs              → authenticated read + update (status / read toggles)
+--   scraping_sources  → authenticated read + write (source CRUD)
 
 alter table jobs enable row level security;
-alter table companies enable row level security;
 alter table scraping_sources enable row level security;
 
-create policy "jobs_anon_read"   on jobs for select to anon using (true);
-create policy "jobs_anon_update" on jobs for update to anon using (true) with check (true);
+create policy "jobs_authenticated_read"   on jobs for select to authenticated using (true);
+create policy "jobs_authenticated_update" on jobs for update to authenticated using (true) with check (true);
 
-create policy "companies_anon_read"   on companies for select to anon using (true);
-create policy "companies_anon_insert" on companies for insert to anon with check (true);
-create policy "companies_anon_update" on companies for update to anon using (true) with check (true);
-create policy "companies_anon_delete" on companies for delete to anon using (true);
-
-create policy "sources_anon_read"   on scraping_sources for select to anon using (true);
-create policy "sources_anon_insert" on scraping_sources for insert to anon with check (true);
-create policy "sources_anon_update" on scraping_sources for update to anon using (true) with check (true);
-create policy "sources_anon_delete" on scraping_sources for delete to anon using (true);
+-- Sources are shared (everyone reads all of them), but only the creator can
+-- edit/delete their own. Legacy rows seeded before this column existed have
+-- created_by = null — treated as editable by anyone rather than locked
+-- forever (#73).
+create policy "sources_authenticated_read"   on scraping_sources for select to authenticated using (true);
+create policy "sources_authenticated_insert" on scraping_sources for insert to authenticated with check (true);
+create policy "sources_authenticated_update" on scraping_sources for update to authenticated
+  using (created_by = auth.uid() or created_by is null)
+  with check (created_by = auth.uid() or created_by is null);
+create policy "sources_authenticated_delete" on scraping_sources for delete to authenticated
+  using (created_by = auth.uid() or created_by is null);
 
 -- Scoring config (issue #43, per-user #75) -----------------------------------
 -- Weighted keywords + hard vetoes. `user_id` is nullable: null = the global
