@@ -94,3 +94,25 @@ Lever and Greenhouse are per-company ATSes — each target company is one row in
 
 The adapter emits only remote roles (Lever `workplaceType = remote` or a
 `/remote/i` location; Greenhouse a `/remote/i` `location.name`).
+
+## Generic adapter remote filtering (#108)
+
+The generic JSON-LD adapter (`scraper/adapters/generic.ts`, used for any
+source without a dedicated ATS adapter) doesn't get a clean structured
+"remote" field the way Lever/Greenhouse do, so it can't just check one
+property. Since #108, it runs each posting through
+`scraper/adapters/remoteFilter.ts` before inserting:
+
+1. Schema.org's `jobLocationType: "TELECOMMUTE"` is trusted first, when the
+   source sets it.
+2. Otherwise, title + location text is checked against a small allow list
+   (`remote`, `work from anywhere`, `remote-first`, `100% remote`) and deny
+   list (`hybrid`, `on-site`/`onsite`, `in-office`) — deny always wins over
+   allow, and a posting with neither cue is dropped by default rather than
+   inserted (this app only wants remote roles, so under-including an
+   unlabeled posting is the safer failure mode than polluting the feed with
+   on-site noise).
+
+Deliberately only title + location are scanned, not the full description —
+a long description can mention "remote" or "hybrid" incidentally (e.g. "you
+will support our remote teams") without describing the role itself.
