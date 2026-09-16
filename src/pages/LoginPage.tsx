@@ -29,7 +29,10 @@ export const LoginPage = () => {
       return
     }
 
-    const { error } = await supabase.auth.signInWithOtp({ email })
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: { emailRedirectTo: window.location.origin },
+    })
     setStatus(error ? 'error' : 'sent')
   }
 
