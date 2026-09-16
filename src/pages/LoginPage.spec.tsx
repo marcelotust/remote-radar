@@ -1,9 +1,10 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { LoginPage } from './LoginPage'
 import { AuthProvider } from '../contexts/AuthContext'
+import { supabase } from '../lib/supabase'
 import { __setSupabaseSession } from '../lib/__mocks__/supabase'
 
 const renderPage = () =>
@@ -27,6 +28,22 @@ describe('LoginPage', () => {
     await user.click(screen.getByRole('button', { name: /enviar link/i }))
 
     await waitFor(() => expect(screen.getByText(/verifique seu e-mail/i)).toBeInTheDocument())
+  })
+
+  it('sends the magic link with emailRedirectTo pointing at the current origin', async () => {
+    const spy = vi.spyOn(supabase.auth, 'signInWithOtp')
+    const user = userEvent.setup()
+    renderPage()
+
+    await user.type(screen.getByLabelText(/e-mail/i), 'marcelotust@gmail.com')
+    await user.click(screen.getByRole('button', { name: /enviar link/i }))
+
+    await waitFor(() =>
+      expect(spy).toHaveBeenCalledWith({
+        email: 'marcelotust@gmail.com',
+        options: { emailRedirectTo: window.location.origin },
+      })
+    )
   })
 
   it('shows a message when the email is not on the allowlist', async () => {
