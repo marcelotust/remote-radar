@@ -17,3 +17,4 @@ coverage
 .agents/
 .claude/skills/
 skills-lock.json
+.playwright-mcp/
