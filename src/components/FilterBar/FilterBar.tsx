@@ -22,35 +22,37 @@ export const FilterBar = () => {
   const { filters, setFilters } = useUIContext()
 
   return (
-    <div className="flex flex-wrap items-center gap-4 px-6 py-3 bg-brand-bg border-b border-brand-gray/20">
-      <div className="flex items-center gap-2 text-sm text-gray-400">
-        <label htmlFor="status-filter">Status</label>
-        <Select
-          id="status-filter"
-          ariaLabel="Status"
-          value={filters.status}
-          onChange={(status) => setFilters({ status })}
-          options={STATUS_OPTIONS}
+    <div className="bg-brand-bg border-b border-brand-gray/20">
+      <div className="flex flex-wrap items-center gap-4 max-w-5xl mx-auto px-4 py-3">
+        <div className="flex items-center gap-2 text-sm text-gray-400">
+          <label htmlFor="status-filter">Status</label>
+          <Select
+            id="status-filter"
+            ariaLabel="Status"
+            value={filters.status}
+            onChange={(status) => setFilters({ status })}
+            options={STATUS_OPTIONS}
+          />
+        </div>
+
+        <div className="flex items-center gap-2 text-sm text-gray-400">
+          <label htmlFor="relevance-filter">Relevância</label>
+          <Select
+            id="relevance-filter"
+            ariaLabel="Relevância"
+            value={filters.relevance}
+            onChange={(relevance) => setFilters({ relevance })}
+            options={RELEVANCE_OPTIONS}
+          />
+        </div>
+
+        <Toggle
+          id="unread-filter"
+          label="Não lidas"
+          checked={filters.unreadOnly}
+          onChange={(checked) => setFilters({ unreadOnly: checked })}
         />
       </div>
-
-      <div className="flex items-center gap-2 text-sm text-gray-400">
-        <label htmlFor="relevance-filter">Relevância</label>
-        <Select
-          id="relevance-filter"
-          ariaLabel="Relevância"
-          value={filters.relevance}
-          onChange={(relevance) => setFilters({ relevance })}
-          options={RELEVANCE_OPTIONS}
-        />
-      </div>
-
-      <Toggle
-        id="unread-filter"
-        label="Não lidas"
-        checked={filters.unreadOnly}
-        onChange={(checked) => setFilters({ unreadOnly: checked })}
-      />
     </div>
   )
 }

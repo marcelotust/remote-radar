@@ -54,7 +54,7 @@ export const InboxPage = () => {
   return (
     <>
       <FilterBar />
-      <main className="mx-auto flex max-w-6xl flex-col px-4 py-6 lg:flex-row lg:items-start lg:gap-6">
+      <main className="mx-auto flex max-w-5xl flex-col px-4 py-6 lg:flex-row lg:items-start lg:gap-6">
         <div className="flex w-full flex-col gap-1 lg:w-2/5">
           {isLoading && <p className="text-sm text-gray-500">Carregando vagas...</p>}
           {!isLoading && visibleJobs.length === 0 && (
