@@ -26,7 +26,14 @@ Remote Radar is a job-tracking SPA for Brazilian remote developers, used by a sm
 
 ### Auth
 
-Login is passwordless (Supabase Auth Email OTP / magic link), gated by an allowlist: `LoginPage` calls the `is_email_allowed` RPC before calling `signInWithOtp`, so only pre-approved emails ever receive a link. There's no self-serve admin UI — adding a friend means inserting their email into `allowed_users` directly in the Supabase SQL editor. `AuthProvider`/`useAuth` (`src/contexts/AuthContext.tsx`) track the session; `RequireAuth` (`src/components/RequireAuth/RequireAuth.tsx`) guards every route except `/login`, redirecting signed-out visitors there.
+`LoginPage` offers two passwordless methods, both gated by the same allowlist: Supabase Auth Email OTP / magic link (`signInWithOtp`), and Google OAuth (`signInWithOAuth`). There's no self-serve admin UI — adding a friend means inserting their email into `allowed_users` directly in the Supabase SQL editor. `AuthProvider`/`useAuth` (`src/contexts/AuthContext.tsx`) track the session; `RequireAuth` (`src/components/RequireAuth/RequireAuth.tsx`) guards every route except `/login`, redirecting signed-out visitors there.
+
+Allowlist enforcement happens in two places, because OAuth can't be pre-checked the way magic link can:
+
+- **Magic link**: `LoginPage` calls the `is_email_allowed` RPC before calling `signInWithOtp`, so a non-approved email never gets a link sent.
+- **Both methods**: the Postgres function `hook_restrict_signup_to_allowlist`, wired up as Supabase's `before-user-created` Auth Hook (dashboard-only setting, not in code), calls the same `is_email_allowed` and rejects account creation outright. This is what actually blocks Google sign-in — the OAuth redirect only returns _after_ Supabase would create the user, so there's no chance to check first client-side the way magic link does. A rejection comes back to `LoginPage` as `error_description` in the URL hash/query, which it reads on mount and clears with `history.replaceState`.
+
+Without custom SMTP configured on the Supabase project, the built-in email service **only delivers to addresses that are members of the project's team** — magic link silently fails to reach anyone else. Google sign-in doesn't depend on Supabase sending any email, so it works regardless (see issue tracking custom SMTP setup).
 
 ### Provider stack (`App.tsx`)
 

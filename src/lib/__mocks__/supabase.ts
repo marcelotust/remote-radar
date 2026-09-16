@@ -206,6 +206,9 @@ export const supabase = {
       if (!email.includes('@')) return { data: {}, error: new Error('Invalid email') }
       return { data: {}, error: null }
     },
+    signInWithOAuth: async () => {
+      return { data: { provider: 'google', url: 'https://accounts.google.com/mock' }, error: null }
+    },
     signOut: async () => {
       __setSupabaseSession(null)
       return { error: null }
