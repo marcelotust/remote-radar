@@ -8,6 +8,7 @@ import { workingnomads } from './workingnomads.ts'
 import { github } from './github.ts'
 import { lever } from './lever.ts'
 import { greenhouse } from './greenhouse.ts'
+import { ashby } from './ashby.ts'
 
 const adapters: Adapter[] = [
   weworkremotely,
@@ -18,6 +19,7 @@ const adapters: Adapter[] = [
   github,
   lever,
   greenhouse,
+  ashby,
 ]
 
 export const resolveAdapter = (sourceUrl: string): Adapter => {
