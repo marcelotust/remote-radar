@@ -17,7 +17,7 @@ describe('App', () => {
   it('redirects unauthenticated visitors to /login', async () => {
     render(<App />)
     await waitFor(() =>
-      expect(screen.getByRole('button', { name: /enviar link/i })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /continuar com google/i })).toBeInTheDocument()
     )
   })
 

@@ -20,40 +20,11 @@ const renderPage = () =>
   )
 
 describe('LoginPage', () => {
-  it('sends the magic link when the email is on the allowlist', async () => {
-    const user = userEvent.setup()
+  it('does not offer email/magic-link sign-in', () => {
     renderPage()
 
-    await user.type(screen.getByLabelText(/e-mail/i), 'marcelotust@gmail.com')
-    await user.click(screen.getByRole('button', { name: /enviar link/i }))
-
-    await waitFor(() => expect(screen.getByText(/verifique seu e-mail/i)).toBeInTheDocument())
-  })
-
-  it('sends the magic link with emailRedirectTo pointing at the current origin', async () => {
-    const spy = vi.spyOn(supabase.auth, 'signInWithOtp')
-    const user = userEvent.setup()
-    renderPage()
-
-    await user.type(screen.getByLabelText(/e-mail/i), 'marcelotust@gmail.com')
-    await user.click(screen.getByRole('button', { name: /enviar link/i }))
-
-    await waitFor(() =>
-      expect(spy).toHaveBeenCalledWith({
-        email: 'marcelotust@gmail.com',
-        options: { emailRedirectTo: window.location.origin },
-      })
-    )
-  })
-
-  it('shows a message when the email is not on the allowlist', async () => {
-    const user = userEvent.setup()
-    renderPage()
-
-    await user.type(screen.getByLabelText(/e-mail/i), 'estranho@example.com')
-    await user.click(screen.getByRole('button', { name: /enviar link/i }))
-
-    await waitFor(() => expect(screen.getByText(/ainda não foi liberado/i)).toBeInTheDocument())
+    expect(screen.queryByLabelText(/e-mail/i)).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /enviar link/i })).not.toBeInTheDocument()
   })
 
   it('redirects to / when a session already exists', async () => {
