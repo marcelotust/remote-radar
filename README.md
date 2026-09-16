@@ -69,6 +69,25 @@ The app runs entirely on mock data (`src/data/mockData.ts`). All mutations write
 
 Open issues tracking what's next: [github.com/marcelotust/remote-radar/issues](https://github.com/marcelotust/remote-radar/issues)
 
+## Finding jobs beyond the scraper
+
+Only companies with a public Lever/Greenhouse/Ashby job board (see
+`scraper/adapters/`) get scraped automatically — most companies' careers
+pages are custom marketing pages the scraper can't parse reliably (see
+`docs/scraper-sources.md`, `docs/company-directory.md`,
+`docs/react-ecosystem-directory.md`). For everything else, search manually:
+
+- **Google Dorks** — narrow a search engine to a specific ATS or company
+  domain, e.g.:
+  - `site:jobs.ashbyhq.com "remote" (react OR typescript)`
+  - `site:boards.greenhouse.io "remote" frontend`
+  - `site:jobs.lever.co "remote" engineer`
+  - `"<company>" careers remote site:linkedin.com/jobs` for a specific target
+- **Ashby** ([jobs.ashbyhq.com](https://jobs.ashbyhq.com)) and **Wellfound**
+  ([wellfound.com](https://wellfound.com)) both let you filter by remote +
+  keyword directly on the portal, without needing a company's own careers
+  page at all — useful for the "not wired" rows in the directory docs above.
+
 ## Routes
 
 | Path        | Page                                      |
