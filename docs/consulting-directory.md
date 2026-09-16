@@ -21,6 +21,64 @@ adapters for those enterprise systems is a much bigger effort for a much
 lower job-relevance payoff (huge, generic corporate req boards, not the kind
 of remote/PJ-friendly roles this app targets) — not attempted here.
 
+## Enterprise ATS analysis — is a Workday/SuccessFactors adapter worth it?
+
+Follow-up analysis (requested after the PR above) on what it would actually
+take to unlock more of the other 99. Checked each of the 100 careers URLs for
+a platform signature in the redirected page (Workday, SuccessFactors, iCIMS,
+Taleo, SmartRecruiters, Phenom, Oracle HCM, BrassRing, Workable, plus
+Lever/Greenhouse/Ashby as a sanity check) instead of just the three ATSes
+this scraper already supports:
+
+| Platform       | Hits | Companies                          |
+| -------------- | ---- | ---------------------------------- |
+| none detected  | 90   | —                                  |
+| Workday        | 3    | Accenture Song, NTT DATA, Diconium |
+| SuccessFactors | 2    | Wipro, Yash Technologies           |
+| Greenhouse     | 2    | Ogilvy, Huge (already wired)       |
+| iCIMS          | 1    | Publicis Sapient                   |
+| Oracle HCM     | 1    | Zensar Technologies                |
+| Workable       | 1    | Zaelab                             |
+
+**Conclusion: not worth building right now.** Workday is the most common
+platform here, but each company is on a different tenant behind its own
+white-labeled domain (`careers.nttdata.com`, `accenture.com/br-pt/careers`,
+...) — there's no shared subdomain pattern to derive a slug from the way
+Lever/Greenhouse/Ashby work, so "one Workday adapter" wouldn't unlock all 3
+companies automatically; each would still need its tenant/site id found
+manually, same per-company cost as what already ruled out the other 90.
+SuccessFactors and Oracle HCM are 1-2 hits each with even less public API
+documentation. The one plausible quick win is **Workable** (Zaelab) — it has
+a clean public API like Greenhouse's, but the account slug is loaded by
+client-side JS on this particular page, so it didn't resolve from a plain
+fetch; not chased further for a single company.
+
+Even if these were unlocked, the job-relevance payoff stays low: GSI-scale
+career boards list thousands of generic corporate reqs, most non-remote, with
+no clean "remote" filter field to select on the way Ashby's `workplaceType`
+or Greenhouse's `location.name` regex let the existing adapters filter — see
+the note on rule-based text filtering below for how this scraper could still
+use these boards despite that.
+
+### Rule-based relevance filtering for ATSes without a clean "remote" field
+
+Raised alongside this analysis: even where an adapter could technically read
+a company's job list, some platforms don't expose a structured
+"remote/onsite" field the way Ashby/Greenhouse do — Workday and SuccessFactors
+job entries are typically per-office-location with no explicit remote flag.
+Rather than requiring a clean structured signal to add an adapter, the same
+idea already powering `computeRelevanceScore` (`src/utils/scoring.ts`) could
+run at ingestion time: match job title/description text against a set of
+allow/deny rules (`"remote"`, `"work from anywhere"`, `"100% remote"` vs.
+`"hybrid"`, `"on-site"`, a specific office city with no remote qualifier) to
+decide whether a listing is even worth inserting, instead of trusting a
+`workplaceType` field that platform doesn't provide. This would need its own
+issue/design pass (where the rule set lives, whether it's shared or
+per-source, how it interacts with the per-user scoring config) rather than
+being folded into an ATS adapter's `parse()` — noted here as the mechanism
+that would make a future Workday/SuccessFactors adapter viable, but not
+designed or implemented in this pass.
+
 ## Ownership note
 
 The issue notes this list is meant to be inserted by **fabiotust@gmail.com**.
