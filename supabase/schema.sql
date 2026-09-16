@@ -148,6 +148,38 @@ $$;
 
 grant execute on function is_email_allowed(text) to anon, authenticated;
 
+-- Login via Google (#100): Auth Hook "before-user-created" — reinforces the
+-- allowlist for every signup method (magic link's RPC check above only runs
+-- client-side, before the redirect; OAuth creates the user only after the
+-- provider redirect returns, with no chance to check first). Wire it up in
+-- Authentication → Hooks → "Before User Created" in the dashboard.
+create or replace function hook_restrict_signup_to_allowlist(event jsonb)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  user_email text;
+begin
+  user_email := event->'user'->>'email';
+
+  if is_email_allowed(user_email) then
+    return '{}'::jsonb;
+  end if;
+
+  return jsonb_build_object(
+    'error', jsonb_build_object(
+      'http_code', 403,
+      'message', 'Esse e-mail ainda não foi liberado. Peça para o administrador te adicionar.'
+    )
+  );
+end;
+$$;
+
+grant execute on function hook_restrict_signup_to_allowlist(jsonb) to supabase_auth_admin;
+revoke execute on function hook_restrict_signup_to_allowlist(jsonb) from authenticated, anon, public;
+
 -- Default global config seed.
 insert into scoring_settings (user_id, high_threshold, medium_threshold)
 values (null, 4, 1)
