@@ -22,6 +22,12 @@ const renderAt = (path: string) =>
   )
 
 describe('NavBar', () => {
+  it('renders the radar emoji logo next to the app name', () => {
+    renderAt('/')
+    expect(screen.getByText('📡')).toBeInTheDocument()
+    expect(screen.getByText('Remote Radar')).toBeInTheDocument()
+  })
+
   it('renders all four navigation links', () => {
     renderAt('/')
     expect(screen.getByRole('link', { name: 'Início' })).toBeInTheDocument()

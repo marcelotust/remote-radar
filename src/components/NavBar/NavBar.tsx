@@ -13,7 +13,10 @@ export const NavBar = () => {
 
   return (
     <nav className="flex flex-wrap items-center gap-6 px-6 py-4 bg-brand-bg border-b border-brand-gray/20">
-      <span className="text-white font-bold text-lg tracking-tight">Remote Radar</span>
+      <span className="text-white font-bold text-lg tracking-tight flex items-center gap-2">
+        <span aria-hidden="true">📡</span>
+        Remote Radar
+      </span>
       {links.map(({ to, label, end }) => (
         <NavLink
           key={to}
