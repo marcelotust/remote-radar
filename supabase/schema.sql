@@ -54,7 +54,8 @@ create table if not exists scraping_sources (
   last_run_at         timestamptz,
   last_run_jobs_added int,
   last_run_status     text check (last_run_status in ('success', 'error')),
-  last_run_error      text
+  last_run_error      text,
+  company_type        text check (company_type in ('startup', 'consultoria', 'produto', 'agregador'))
 );
 
 -- Row Level Security ---------------------------------------------------------

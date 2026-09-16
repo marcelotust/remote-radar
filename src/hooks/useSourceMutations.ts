@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { SOURCES_KEY } from './useSources'
 import type { ScrapingSource } from '../types'
 
-type NewSource = Pick<ScrapingSource, 'label' | 'url' | 'is_active'>
+type NewSource = Pick<ScrapingSource, 'label' | 'url' | 'is_active' | 'company_type'>
 
 export const useAddSource = () => {
   const qc = useQueryClient()
@@ -33,6 +33,7 @@ export const useEditSource = () => {
         label: source.label,
         url: source.url,
         is_active: source.is_active,
+        company_type: source.company_type ?? null,
       }
       const { data: updated, error } = await supabase
         .from('scraping_sources')

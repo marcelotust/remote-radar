@@ -2,11 +2,18 @@ import { useDeleteSource, useEditSource } from '../../hooks/useSourceMutations'
 import { useUIContext } from '../../contexts/UIContext'
 import { useAuth } from '../../contexts/AuthContext'
 import { Toggle } from '../Toggle/Toggle'
-import type { ScrapingSource } from '../../types'
+import type { CompanyType, ScrapingSource } from '../../types'
 import { formatLastRun } from './formatLastRun'
 
 interface Props {
   source: ScrapingSource
+}
+
+const COMPANY_TYPE_LABEL: Record<CompanyType, string> = {
+  startup: 'Startup',
+  consultoria: 'Consultoria',
+  produto: 'Produto',
+  agregador: 'Agregador',
 }
 
 export const SourceCard = ({ source }: Props) => {
@@ -32,7 +39,14 @@ export const SourceCard = ({ source }: Props) => {
   return (
     <article className="bg-brand-surface border-2 border-brand-green/20 rounded-3xl p-5 flex flex-col gap-2 transition-all duration-300 hover:border-brand-green/60 hover:shadow-neon-card">
       <div className="flex items-center justify-between gap-2">
-        <span className="text-white font-semibold text-sm">{source.label}</span>
+        <span className="text-white font-semibold text-sm flex items-center gap-2">
+          {source.label}
+          {source.company_type && (
+            <span className="rounded-full border border-brand-green/30 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-brand-green">
+              {COMPANY_TYPE_LABEL[source.company_type]}
+            </span>
+          )}
+        </span>
         <Toggle
           id={`source-active-${source.id}`}
           label="Ativo"
