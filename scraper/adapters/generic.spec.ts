@@ -11,7 +11,7 @@ const html = readFileSync(
 )
 
 describe('parseJsonLd', () => {
-  it('extracts JobPosting entries and ignores non-jobs', () => {
+  it('extracts remote JobPosting entries and ignores non-jobs', () => {
     const jobs = parseJsonLd(html)
     expect(jobs).toHaveLength(2)
     expect(jobs[0]).toEqual({
@@ -38,5 +38,25 @@ describe('parseJsonLd', () => {
     expect(jobs.some((j) => j.published_at === '2026-06-12T00:00:00.000Z')).toBe(true)
     const dateless = jobs.find((j) => j.title === 'Backend Engineer')
     expect(dateless?.published_at).toBeNull()
+  })
+
+  it('accepts a posting via schema.org jobLocationType: TELECOMMUTE regardless of title text', () => {
+    const jobs = parseJsonLd(html)
+    expect(jobs.some((j) => j.title === 'Backend Engineer')).toBe(true)
+  })
+
+  it('accepts a posting whose location text says Remote', () => {
+    const jobs = parseJsonLd(html)
+    expect(jobs.some((j) => j.title === 'Senior Frontend Engineer')).toBe(true)
+  })
+
+  it('drops a posting whose title says Hybrid, even with no other remote cue', () => {
+    const jobs = parseJsonLd(html)
+    expect(jobs.some((j) => j.title === 'Hybrid Product Designer')).toBe(false)
+  })
+
+  it('drops a posting with no remote/hybrid/onsite cue at all (ambiguous default)', () => {
+    const jobs = parseJsonLd(html)
+    expect(jobs.some((j) => j.title === 'Office Manager')).toBe(false)
   })
 })
