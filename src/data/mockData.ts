@@ -27,7 +27,7 @@ const SOURCE_SEED: { label: string; url: string }[] = [
   // Exclusivo Remoto
   { label: 'Remote OK', url: 'https://remoteok.com' },
   { label: 'We Work Remotely', url: 'https://weworkremotely.com' },
-  { label: 'Remotive', url: 'https://remotive.io' },
+  { label: 'Remotive', url: 'https://remotive.com/api/remote-jobs' },
   { label: 'Jobspresso', url: 'https://jobspresso.co' },
   { label: 'Working Nomads', url: 'https://www.workingnomads.com' },
   { label: 'JustRemote', url: 'https://justremote.co' },

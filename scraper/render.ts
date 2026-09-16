@@ -11,7 +11,12 @@ export const renderPage = async (
   const page = await browser.newPage()
   try {
     await page.goto(url, { waitUntil: 'domcontentloaded', timeout: timeoutMs })
-    await page.waitForSelector(readySelector, { timeout: timeoutMs })
+    // 'attached' (not the default 'visible'): several adapters wait on
+    // elements that are never visible by design — <script type="application/
+    // ld+json"> has no layout box, and some sites serve raw JSON in a <pre>
+    // that Chromium may not render as "visible". We only need the content,
+    // not for it to be painted on screen.
+    await page.waitForSelector(readySelector, { timeout: timeoutMs, state: 'attached' })
     return await page.content()
   } finally {
     await page.close()
