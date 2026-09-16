@@ -38,6 +38,17 @@ describe('SourceCard', () => {
     expect(screen.getByText('https://jobs.lever.co')).toBeInTheDocument()
   })
 
+  it('does not render a company-type badge when unclassified', () => {
+    render(<SourceCard source={source} />, { wrapper: makeWrapper() })
+    expect(screen.queryByText(/startup|consultoria|produto|agregador/i)).not.toBeInTheDocument()
+  })
+
+  it('renders the company-type badge when classified', () => {
+    const classified = { ...source, company_type: 'startup' as const }
+    render(<SourceCard source={classified} />, { wrapper: makeWrapper() })
+    expect(screen.getByText('Startup')).toBeInTheDocument()
+  })
+
   it('renders active toggle checked when is_active is true', () => {
     render(<SourceCard source={source} />, { wrapper: makeWrapper() })
     expect(screen.getByRole('checkbox')).toBeChecked()

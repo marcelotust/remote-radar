@@ -45,6 +45,12 @@ const existingSource: ScrapingSource = {
   created_at: '2026-06-01T00:00:00Z',
 }
 
+const classifiedSource: ScrapingSource = {
+  ...existingSource,
+  id: 's2',
+  company_type: 'startup',
+}
+
 const renderModal = () => {
   const wrapper = makeWrapper()
   render(
@@ -68,11 +74,43 @@ describe('AddSourceModal', () => {
     expect(screen.getByRole('dialog')).toBeInTheDocument()
   })
 
-  it('has label and URL inputs', async () => {
+  it('has label, URL, and company-type inputs', async () => {
     renderModal()
     await userEvent.click(screen.getByText('open'))
     expect(screen.getByLabelText(/label/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/url/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/tipo de empresa/i)).toHaveValue('')
+  })
+
+  it('submits with a selected company_type and closes the modal', async () => {
+    const wrapper = makeWrapper()
+    render(
+      <>
+        <OpenTrigger />
+        <AddSourceModal />
+      </>,
+      { wrapper }
+    )
+    await userEvent.click(screen.getByText('open'))
+    await userEvent.type(screen.getByLabelText(/label/i), 'New Source')
+    await userEvent.type(screen.getByLabelText(/url/i), 'https://example.com')
+    await userEvent.selectOptions(screen.getByLabelText(/tipo de empresa/i), 'startup')
+    await userEvent.click(screen.getByRole('button', { name: /adicionar/i }))
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  it('prefills company_type when editing a classified source', async () => {
+    const wrapper = makeWrapper()
+    render(
+      <>
+        <EditTrigger source={classifiedSource} />
+        <AddSourceModal />
+      </>,
+      { wrapper }
+    )
+    await userEvent.click(screen.getByText('edit'))
+    expect(screen.getByLabelText(/tipo de empresa/i)).toHaveValue('startup')
   })
 
   it('closes when cancel is clicked', async () => {

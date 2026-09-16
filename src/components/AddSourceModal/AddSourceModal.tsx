@@ -1,9 +1,17 @@
 import { useState, useEffect } from 'react'
 import { useUIContext } from '../../contexts/UIContext'
 import { useAddSource, useEditSource } from '../../hooks/useSourceMutations'
+import type { CompanyType } from '../../types'
 
 const inputClass =
   'bg-brand-input text-white border-2 border-brand-green/20 rounded-2xl px-3 py-2 text-sm transition-all duration-300 focus:outline-none focus:border-brand-green focus:bg-brand-green/5 focus:shadow-neon-input'
+
+const COMPANY_TYPE_OPTIONS: { value: CompanyType; label: string }[] = [
+  { value: 'startup', label: 'Startup' },
+  { value: 'consultoria', label: 'Consultoria' },
+  { value: 'produto', label: 'Produto' },
+  { value: 'agregador', label: 'Agregador' },
+]
 
 export const AddSourceModal = () => {
   const { sourceModalOpen, setSourceModalOpen, editingSource, setEditingSource } = useUIContext()
@@ -12,14 +20,17 @@ export const AddSourceModal = () => {
 
   const [label, setLabel] = useState('')
   const [url, setUrl] = useState('')
+  const [companyType, setCompanyType] = useState<CompanyType | ''>('')
 
   useEffect(() => {
     if (editingSource) {
       setLabel(editingSource.label)
       setUrl(editingSource.url)
+      setCompanyType(editingSource.company_type ?? '')
     } else {
       setLabel('')
       setUrl('')
+      setCompanyType('')
     }
   }, [editingSource])
 
@@ -30,10 +41,11 @@ export const AddSourceModal = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    const company_type = companyType || null
     if (editingSource) {
-      editSource({ ...editingSource, label, url })
+      editSource({ ...editingSource, label, url, company_type })
     } else {
-      addSource({ label, url, is_active: true })
+      addSource({ label, url, is_active: true, company_type })
     }
     handleClose()
   }
@@ -71,6 +83,22 @@ export const AddSourceModal = () => {
               onChange={(e) => setUrl(e.target.value)}
               className={inputClass}
             />
+          </label>
+          <label className="flex flex-col gap-1 text-sm text-gray-400">
+            Tipo de empresa
+            <select
+              aria-label="Tipo de empresa"
+              value={companyType}
+              onChange={(e) => setCompanyType(e.target.value as CompanyType | '')}
+              className={inputClass}
+            >
+              <option value="">Não classificado</option>
+              {COMPANY_TYPE_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
           </label>
           <div className="flex justify-end gap-2 mt-2">
             <button

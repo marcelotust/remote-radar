@@ -77,7 +77,7 @@ All data is read from / written to Supabase inside the hooks — components and 
 
 - `Job` — core entity, shared across all users; `status` (`none | applied | dismissed`) and `read` are populated per-user by `useJobs` from `job_user_state`, not stored on `Job` itself in the DB.
 - `JobUserState` — `{ user_id, job_id, status, read }`, one row per (user, job) pair.
-- `ScrapingSource` — shared; `created_by`/`created_by_email` record who added it.
+- `ScrapingSource` — shared; `created_by`/`created_by_email` record who added it. `company_type` (`'startup' | 'consultoria' | 'produto' | 'agregador' | null`, #109) tags the source's profile — null means unclassified, set from the "Adicionar Fonte"/"Editar Fonte" form and shown as a badge on `SourceCard`.
 - `ScoringKeyword` / `ScoringSettings` — `user_id: string | null`; `null` is the global default, a real id is that user's personal override.
 - `FilterState` — `{ status, relevance, unreadOnly }` held in `UIContext`.
 

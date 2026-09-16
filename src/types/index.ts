@@ -27,6 +27,8 @@ export interface JobUserState {
   created_at: string
 }
 
+export type CompanyType = 'startup' | 'consultoria' | 'produto' | 'agregador'
+
 export interface ScrapingSource {
   id: string
   url: string
@@ -39,6 +41,7 @@ export interface ScrapingSource {
   last_run_jobs_added?: number | null
   last_run_status?: 'success' | 'error' | null
   last_run_error?: string | null
+  company_type?: CompanyType | null
 }
 
 export interface ScoringRule {
