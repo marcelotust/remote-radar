@@ -58,7 +58,7 @@ describe('InboxPage', () => {
         location: null,
         description: null,
         posted_at: null,
-        scraped_at: '2026-06-01T00:00:00Z',
+        scraped_at: new Date().toISOString(),
         status: 'none',
         read: false,
         source_url: null,

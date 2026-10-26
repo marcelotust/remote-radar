@@ -8,11 +8,26 @@ import {
 } from '../../data/mockData'
 
 // In-memory fake of the Supabase client used in tests. It mimics the subset of
-// the query-builder API the hooks rely on (select/insert/update/delete/eq/single/
-// order) backed by clones of the mock data. `__resetSupabaseMock` reseeds the
-// store and is called before every test (see src/test-setup.ts).
+// the query-builder API the hooks rely on (select/insert/update/delete/eq/is/in/
+// gte/range/single, plus order, which is accepted but not applied — rows keep
+// insertion order) backed by clones of the mock data. `__resetSupabaseMock`
+// reseeds the store and is called before every test (see src/test-setup.ts).
 
 type Row = Record<string, unknown>
+
+// PostgREST's default `max_rows`: no select response carries more rows than
+// this, whatever the query asks for. Emulated so unpaged selects truncate in
+// tests exactly as they do in production.
+const MAX_ROWS = 1000
+
+// Timestamps compare chronologically (mock data mixes 'Z' and '.000Z'
+// suffixes); anything else falls back to string order, like Postgres text.
+const compareValues = (a: unknown, b: unknown): number => {
+  const ta = Date.parse(String(a))
+  const tb = Date.parse(String(b))
+  if (!Number.isNaN(ta) && !Number.isNaN(tb)) return ta - tb
+  return String(a).localeCompare(String(b))
+}
 
 const seed = (): Record<string, Row[]> => ({
   jobs: structuredClone(MOCK_JOBS) as unknown as Row[],
@@ -55,8 +70,9 @@ type QueryResult = { data: unknown; error: Error | null }
 class QueryBuilder implements PromiseLike<QueryResult> {
   private op: 'select' | 'insert' | 'update' | 'delete' | 'upsert' = 'select'
   private payload: Row | Row[] | null = null
-  private filters: Array<[string, unknown]> = []
+  private filters: Array<(row: Row) => boolean> = []
   private singleRow = false
+  private rowRange: [number, number] | null = null
   private conflictColumns: string[] = ['id']
 
   constructor(private table: string) {}
@@ -94,12 +110,28 @@ class QueryBuilder implements PromiseLike<QueryResult> {
   }
 
   eq(column: string, value: unknown) {
-    this.filters.push([column, value])
+    this.filters.push((row) => row[column] === value)
     return this
   }
 
   is(column: string, value: unknown) {
-    this.filters.push([column, value])
+    this.filters.push((row) => row[column] === value)
+    return this
+  }
+
+  in(column: string, values: unknown[]) {
+    this.filters.push((row) => values.includes(row[column]))
+    return this
+  }
+
+  gte(column: string, value: unknown) {
+    this.filters.push((row) => compareValues(row[column], value) >= 0)
+    return this
+  }
+
+  /** Inclusive on both ends, like PostgREST's `Range: from-to`. */
+  range(from: number, to: number) {
+    this.rowRange = [from, to]
     return this
   }
 
@@ -109,7 +141,7 @@ class QueryBuilder implements PromiseLike<QueryResult> {
   }
 
   private matches(row: Row) {
-    return this.filters.every(([col, val]) => row[col] === val)
+    return this.filters.every((matches) => matches(row))
   }
 
   private run(): QueryResult {
@@ -169,7 +201,10 @@ class QueryBuilder implements PromiseLike<QueryResult> {
         }
       }
       default: {
-        const selected = this.filters.length ? table.filter((r) => this.matches(r)) : table
+        const filtered = this.filters.length ? table.filter((r) => this.matches(r)) : table
+        const selected = (
+          this.rowRange ? filtered.slice(this.rowRange[0], this.rowRange[1] + 1) : filtered
+        ).slice(0, MAX_ROWS)
         return {
           data: this.singleRow ? structuredClone(selected[0] ?? null) : structuredClone(selected),
           error: null,

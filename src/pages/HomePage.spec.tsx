@@ -51,7 +51,7 @@ describe('HomePage', () => {
         location: null,
         description: null,
         posted_at: null,
-        scraped_at: '2026-06-20T06:00:00Z',
+        scraped_at: new Date().toISOString(),
         source_url: null,
       })
       .select()
