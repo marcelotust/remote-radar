@@ -1,3 +1,10 @@
+/** Drop tags from an HTML fragment and collapse the whitespace left behind. */
+export const stripHtml = (html: string): string =>
+  html
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+
 /** Collapse internal whitespace and trim an element's text content, or null. */
 export const text = (el: Element | null): string | null =>
   el?.textContent?.replace(/\s+/g, ' ').trim() || null
