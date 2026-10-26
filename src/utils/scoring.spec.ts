@@ -87,4 +87,17 @@ describe('computeRelevanceScore', () => {
     const { matchedKeywords } = computeRelevanceScore(job, config)
     expect(matchedKeywords).toEqual(['react'])
   })
+
+  it('ignores a veto term that only appears in the description', () => {
+    const job = {
+      title: 'Staff Frontend Engineer',
+      description: 'React and TypeScript on the web app; our backend services are Java.',
+    }
+    expect(computeRelevanceScore(job, config).level).toBe('high')
+  })
+
+  it('applies vetoes to the location', () => {
+    const job = { title: 'React Developer', description: null, location: 'Presencial São Paulo' }
+    expect(computeRelevanceScore(job, config).level).toBe('negative')
+  })
 })

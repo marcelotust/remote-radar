@@ -2,6 +2,7 @@ import type { Adapter, RawJob, FetchContext } from './adapters/types.ts'
 import type { JobRow, SourceRow, SourceRunResult } from './db.ts'
 import type { RelevanceLevel } from '../src/types/index.ts'
 import { recencyCutoffIso, isRecent } from './recency.ts'
+import { isDevRole } from './roleFilter.ts'
 
 export interface PipelineDeps {
   fetchActiveSources: () => Promise<SourceRow[]>
@@ -51,7 +52,7 @@ export const runScrape = async (deps: PipelineDeps): Promise<ScrapeSummary> => {
       }
       const rows: JobRow[] = adapter
         .parse(content)
-        .filter((raw) => isRecent(raw.published_at, cutoff))
+        .filter((raw) => isRecent(raw.published_at, cutoff) && isDevRole(raw.title))
         .map((raw) => {
           const { relevance_score, relevance_level } = deps.scoreJob(raw)
           return {

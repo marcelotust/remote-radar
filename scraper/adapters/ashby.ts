@@ -1,4 +1,5 @@
 import type { Adapter, FetchContext, RawJob } from './types.ts'
+import { stripHtml } from './dom.ts'
 
 interface AshbyJob {
   title?: string
@@ -15,12 +16,6 @@ interface AshbyBoard {
 }
 
 const DESCRIPTION_MAX = 5000
-
-const stripHtml = (html: string): string =>
-  html
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
 
 const isRemote = (job: AshbyJob): boolean => /^remote$/i.test(job.workplaceType ?? '')
 

@@ -7,7 +7,7 @@ export const scoreJob = (
   raw: RawJob
 ): { relevance_score: number; relevance_level: RelevanceLevel } => {
   const { score, level } = computeRelevanceScore(
-    { title: raw.title, description: raw.description },
+    { title: raw.title, description: raw.description, location: raw.location },
     DEFAULT_SCORING_CONFIG
   )
   return { relevance_score: score, relevance_level: level }

@@ -9,6 +9,25 @@ import type { Job, JobUserState } from '../types'
 
 export const JOBS_KEY = ['jobs'] as const
 
+/** How far back the feed reaches. Older jobs stay in the table but leave the feed. */
+export const FEED_WINDOW_DAYS = 30
+
+/**
+ * Rows requested per call. PostgREST caps every response at 1,000 rows by
+ * default, so an unpaged select('*') silently truncates — that is what froze
+ * the feed on 2026-09-14.
+ */
+export const FEED_PAGE_SIZE = 1000
+
+// Keeps each `id=in.(...)` query string well under URL length limits.
+const ID_CHUNK_SIZE = 100
+
+const MS_PER_DAY = 86_400_000
+
+// UTC calendar day, matching relativeDate's "hoje"/"ontem": a day's scrape is
+// ranked by relevance instead of by which source batch happened to finish last.
+const scrapeDay = (iso: string): number => Math.floor((Date.parse(iso) || 0) / MS_PER_DAY)
+
 export const enrichJobs = (rawJobs: Job[], config: ScoringConfig = DEFAULT_SCORING_CONFIG): Job[] =>
   rawJobs
     .map((job) => {
@@ -20,10 +39,40 @@ export const enrichJobs = (rawJobs: Job[], config: ScoringConfig = DEFAULT_SCORI
         matched_keywords: matchedKeywords,
       }
     })
-    .sort((a, b) => {
-      const t = new Date(b.scraped_at).getTime() - new Date(a.scraped_at).getTime()
-      return t !== 0 ? t : (b.relevance_score ?? 0) - (a.relevance_score ?? 0)
-    })
+    .sort(
+      (a, b) =>
+        scrapeDay(b.scraped_at) - scrapeDay(a.scraped_at) ||
+        (b.relevance_score ?? 0) - (a.relevance_score ?? 0) ||
+        (Date.parse(b.scraped_at) || 0) - (Date.parse(a.scraped_at) || 0)
+    )
+
+type PageResult<T> = PromiseLike<{ data: T[] | null; error: unknown }>
+
+/** Calls `page(from, to)` until a short page comes back, concatenating the rows. */
+const fetchAllPages = async <T>(
+  page: (from: number, to: number) => PageResult<T>
+): Promise<T[]> => {
+  const rows: T[] = []
+  for (let from = 0; ; from += FEED_PAGE_SIZE) {
+    const { data, error } = await page(from, from + FEED_PAGE_SIZE - 1)
+    if (error) throw error
+    rows.push(...(data ?? []))
+    if ((data ?? []).length < FEED_PAGE_SIZE) return rows
+  }
+}
+
+const fetchJobsByIds = async (ids: string[]): Promise<Job[]> => {
+  const rows: Job[] = []
+  for (let i = 0; i < ids.length; i += ID_CHUNK_SIZE) {
+    const { data, error } = await supabase
+      .from('jobs')
+      .select('*')
+      .in('id', ids.slice(i, i + ID_CHUNK_SIZE))
+    if (error) throw error
+    rows.push(...((data ?? []) as Job[]))
+  }
+  return rows
+}
 
 export const useJobs = () => {
   const { user } = useAuth()
@@ -33,15 +82,37 @@ export const useJobs = () => {
     queryKey: JOBS_KEY,
     queryFn: async () => {
       const userId = user!.id
-      const [jobsRes, stateRes] = await Promise.all([
-        supabase.from('jobs').select('*'),
-        supabase.from('job_user_state').select('*').eq('user_id', userId),
+      const sinceIso = new Date(Date.now() - FEED_WINDOW_DAYS * MS_PER_DAY).toISOString()
+      const [recent, states] = await Promise.all([
+        fetchAllPages<Job>((from, to) =>
+          supabase
+            .from('jobs')
+            .select('*')
+            .gte('scraped_at', sinceIso)
+            .order('scraped_at', { ascending: false })
+            .order('id')
+            .range(from, to)
+        ),
+        fetchAllPages<JobUserState>((from, to) =>
+          supabase
+            .from('job_user_state')
+            .select('*')
+            .eq('user_id', userId)
+            .order('id')
+            .range(from, to)
+        ),
       ])
-      if (jobsRes.error) throw jobsRes.error
-      if (stateRes.error) throw stateRes.error
 
-      const stateByJobId = new Map((stateRes.data as JobUserState[]).map((s) => [s.job_id, s]))
-      return (jobsRes.data as Job[]).map((job) => {
+      // Jobs the user applied to stay reachable after they age out of the
+      // window, so the "Candidatado" filter keeps the whole history.
+      const recentIds = new Set(recent.map((j) => j.id))
+      const olderAppliedIds = states
+        .filter((s) => s.status === 'applied' && !recentIds.has(s.job_id))
+        .map((s) => s.job_id)
+      const olderApplied = olderAppliedIds.length ? await fetchJobsByIds(olderAppliedIds) : []
+
+      const stateByJobId = new Map(states.map((s) => [s.job_id, s]))
+      return [...recent, ...olderApplied].map((job) => {
         const state = stateByJobId.get(job.id)
         return { ...job, status: state?.status ?? 'none', read: state?.read ?? false }
       })

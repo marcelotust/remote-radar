@@ -7,12 +7,16 @@ const matchesKeyword = (text: string, keyword: string): boolean => {
 }
 
 export const computeRelevanceScore = (
-  job: Pick<Job, 'title' | 'description'>,
+  job: Pick<Job, 'title' | 'description'> & { location?: string | null },
   config: ScoringConfig
 ): { score: number; level: RelevanceLevel; matchedKeywords: string[] } => {
   const text = `${job.title} ${job.description ?? ''}`.toLowerCase()
+  // Vetoes only read the title and location: a description that mentions a
+  // stack or work mode in passing ("our backend is Java", "hybrid or remote")
+  // must not sink an otherwise matching role.
+  const vetoText = `${job.title} ${job.location ?? ''}`.toLowerCase()
 
-  const matched = config.keywords.filter((k) => matchesKeyword(text, k.term))
+  const matched = config.keywords.filter((k) => matchesKeyword(k.is_veto ? vetoText : text, k.term))
   const hasVeto = matched.some((k) => k.is_veto)
   const positives = matched.filter((k) => !k.is_veto && k.weight > 0)
   const score = matched.filter((k) => !k.is_veto).reduce((sum, k) => sum + k.weight, 0)

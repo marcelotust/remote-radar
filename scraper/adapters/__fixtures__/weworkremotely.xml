@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>We Work Remotely: Front-End Programming Jobs</title>
+    <link>https://weworkremotely.com/categories/remote-front-end-programming-jobs</link>
+    <item>
+      <title>Reddit: Frontend Engineer, Ads</title>
+      <region>Anywhere in the World</region>
+      <country></country>
+      <category>Front-End Programming</category>
+      <type>Full-Time</type>
+      <description>
+&lt;p&gt;&lt;strong&gt;Headquarters:&lt;/strong&gt; Remote&lt;/p&gt;
+&lt;p&gt;Build ad experiences in React.&lt;/p&gt;
+</description>
+      <pubDate>Mon, 26 Oct 2026 07:31:27 +0000</pubDate>
+      <guid>https://weworkremotely.com/remote-jobs/reddit-frontend-engineer-ads</guid>
+      <link>https://weworkremotely.com/remote-jobs/reddit-frontend-engineer-ads</link>
+    </item>
+    <item>
+      <title>Proxify AB: Senior Fullstack Developer (Python)</title>
+      <region></region>
+      <country>Sweden</country>
+      <category>Full-Stack Programming</category>
+      <description></description>
+      <guid>https://weworkremotely.com/remote-jobs/proxify-ab-senior-fullstack-developer-python-3</guid>
+      <link>https://weworkremotely.com/remote-jobs/proxify-ab-senior-fullstack-developer-python-3</link>
+    </item>
+    <item>
+      <title>Untitled listing</title>
+      <region>Anywhere in the World</region>
+      <description>No company prefix in the title.</description>
+      <link>https://weworkremotely.com/remote-jobs/untitled-listing</link>
+    </item>
+  </channel>
+</rss>

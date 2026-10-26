@@ -91,6 +91,10 @@ export const MOCK_SCORING_SETTINGS: ScoringSettings[] = [
   },
 ]
 
+// Relative to the test run so the seeded jobs fall inside useJobs' feed window
+// (FEED_WINDOW_DAYS). All three share it, so the feed ranks them by relevance.
+const RECENTLY_SCRAPED = new Date(Date.now() - 2 * 3_600_000).toISOString()
+
 export const MOCK_JOBS: Job[] = [
   {
     id: 'j1',
@@ -100,7 +104,7 @@ export const MOCK_JOBS: Job[] = [
     location: 'Remote',
     description: 'We are looking for a React TypeScript engineer with Next.js experience.',
     posted_at: '2026-06-19T00:00:00Z',
-    scraped_at: '2026-06-20T06:00:00Z',
+    scraped_at: RECENTLY_SCRAPED,
     status: 'none',
     read: false,
     source_url: 'https://jobs.lever.co',
@@ -113,7 +117,7 @@ export const MOCK_JOBS: Job[] = [
     location: 'Remote',
     description: 'PHP and Java backend with some frontend work.',
     posted_at: '2026-06-18T00:00:00Z',
-    scraped_at: '2026-06-20T06:00:00Z',
+    scraped_at: RECENTLY_SCRAPED,
     status: 'none',
     read: false,
     source_url: 'https://boards.greenhouse.io',
@@ -126,7 +130,7 @@ export const MOCK_JOBS: Job[] = [
     location: 'Presencial São Paulo',
     description: 'React frontend developer. Must work presencial.',
     posted_at: '2026-06-17T00:00:00Z',
-    scraped_at: '2026-06-20T06:00:00Z',
+    scraped_at: RECENTLY_SCRAPED,
     status: 'none',
     read: true,
     source_url: 'https://jobs.lever.co',
