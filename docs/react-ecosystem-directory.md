@@ -93,7 +93,7 @@ jobs beyond the scraper" for Google Dorks + Ashby/Wellfound search tips.
 | 164 | Twilio Segment  | Customer Data Platform (CDP)                | https://segment.com/careers/                 | —          | Não wired (sem ATS detectado) |
 | 165 | RudderStack     | Customer Data Pipeline for Developers       | https://www.rudderstack.com/careers/         | —          | Não wired (sem ATS detectado) |
 | 166 | Mixpanel        | Product Analytics for Mobile & Web          | https://mixpanel.com/jobs/                   | Greenhouse | Ativo em scraping_sources     |
-| 167 | Amplitude       | Digital Analytics & Optimization Platform   | https://amplitude.com/careers                | Greenhouse | Ativo em scraping_sources     |
+| 167 | Amplitude       | Digital Analytics & Optimization Platform   | https://amplitude.com/careers                | Ashby      | Ativo em scraping_sources     |
 | 168 | Heap            | Automated Digital Behavioral Analytics      | https://www.heap.io/careers                  | —          | Não wired (sem ATS detectado) |
 | 169 | FullStory       | Behavioral Data & Session Insights          | https://www.fullstory.com/careers/           | —          | Não wired (sem ATS detectado) |
 | 170 | LogRocket       | Frontend Monitoring & Session Replay        | https://logrocket.com/jobs/                  | —          | Não wired (sem ATS detectado) |
