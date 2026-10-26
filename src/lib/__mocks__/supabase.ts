@@ -29,8 +29,19 @@ const compareValues = (a: unknown, b: unknown): number => {
   return String(a).localeCompare(String(b))
 }
 
+// Emulates the jobs columns Postgres fills in: `last_seen_at` defaults to now()
+// and `listed_at` is generated from posted_at/scraped_at. The fake keeps them
+// current on every write so queries can filter on them like the real table.
+const withJobColumns = (row: Row): Row => ({
+  last_seen_at: new Date().toISOString(),
+  ...row,
+  listed_at: row.posted_at ?? row.scraped_at,
+})
+
 const seed = (): Record<string, Row[]> => ({
-  jobs: structuredClone(MOCK_JOBS) as unknown as Row[],
+  jobs: (structuredClone(MOCK_JOBS) as unknown as Row[]).map((j) =>
+    withJobColumns({ last_seen_at: j.scraped_at, ...j })
+  ),
   scraping_sources: structuredClone(MOCK_SOURCES) as unknown as Row[],
   scoring_keywords: structuredClone(MOCK_SCORING_KEYWORDS) as unknown as Row[],
   scoring_settings: structuredClone(MOCK_SCORING_SETTINGS) as unknown as Row[],
@@ -148,13 +159,18 @@ class QueryBuilder implements PromiseLike<QueryResult> {
     const table = db[this.table]
     if (!table) return { data: null, error: new Error(`Unknown table: ${this.table}`) }
 
+    const isJobs = this.table === 'jobs'
+    // Recompute the jobs columns Postgres derives after a write.
+    const derive = (row: Row): Row => (isJobs ? Object.assign(row, withJobColumns(row)) : row)
+
     switch (this.op) {
       case 'insert': {
-        const stamp = (p: Row): Row => ({
-          id: crypto.randomUUID(),
-          created_at: new Date().toISOString(),
-          ...p,
-        })
+        const stamp = (p: Row): Row =>
+          derive({
+            id: crypto.randomUUID(),
+            created_at: new Date().toISOString(),
+            ...p,
+          })
         if (Array.isArray(this.payload)) {
           const rows = this.payload.map(stamp)
           table.push(...rows)
@@ -167,7 +183,7 @@ class QueryBuilder implements PromiseLike<QueryResult> {
       case 'update': {
         const updated = table
           .filter((r) => this.matches(r))
-          .map((r) => Object.assign(r, this.payload as Row))
+          .map((r) => derive(Object.assign(r, this.payload as Row)))
         return {
           data: this.singleRow ? structuredClone(updated[0] ?? null) : structuredClone(updated),
           error: null,
@@ -184,14 +200,13 @@ class QueryBuilder implements PromiseLike<QueryResult> {
             this.conflictColumns.every((c) => r[c] === incoming[c])
           )
           if (existing) {
-            Object.assign(existing, incoming)
-            return existing
+            return derive(Object.assign(existing, incoming))
           }
-          const row: Row = {
+          const row: Row = derive({
             id: crypto.randomUUID(),
             created_at: new Date().toISOString(),
             ...incoming,
-          }
+          })
           table.push(row)
           return row
         })

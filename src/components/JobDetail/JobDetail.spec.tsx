@@ -38,6 +38,25 @@ describe('JobDetail', () => {
     expect(screen.getByText('Build the dashboard with React and TypeScript.')).toBeInTheDocument()
   })
 
+  it('shows both the publication date and when the job was first seen', () => {
+    const now = Date.now()
+    const job = {
+      ...baseJob,
+      posted_at: new Date(now - 20 * 86_400_000).toISOString(),
+      scraped_at: new Date(now).toISOString(),
+    }
+    render(<JobDetail job={job} />, { wrapper: makeWrapper() })
+    expect(
+      screen.getByText(/publicada há 2 semanas · vista pela primeira vez hoje/i)
+    ).toBeInTheDocument()
+  })
+
+  it('only says when it was added when the source gave no publication date', () => {
+    const job = { ...baseJob, posted_at: null, scraped_at: new Date().toISOString() }
+    render(<JobDetail job={job} />, { wrapper: makeWrapper() })
+    expect(screen.getByText(/adicionada hoje/i)).toBeInTheDocument()
+  })
+
   it('falls back to a placeholder when description is null', () => {
     render(<JobDetail job={{ ...baseJob, description: null }} />, { wrapper: makeWrapper() })
     expect(screen.getByText(/sem descrição disponível/i)).toBeInTheDocument()

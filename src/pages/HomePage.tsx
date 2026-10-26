@@ -1,17 +1,12 @@
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { useJobs } from '../hooks/useJobs'
-
-const ONE_DAY_MS = 24 * 60 * 60 * 1000
+import { isNewJob } from '../utils/jobDates'
 
 export const HomePage = () => {
   const { data: jobs = [] } = useJobs()
 
-  const newLastDay = useMemo(() => {
-    // eslint-disable-next-line react-hooks/purity
-    const cutoff = Date.now() - ONE_DAY_MS
-    return jobs.filter((j) => new Date(j.scraped_at).getTime() >= cutoff).length
-  }, [jobs])
+  const newThisWeek = useMemo(() => jobs.filter((j) => isNewJob(j)).length, [jobs])
 
   const unreadCount = useMemo(() => jobs.filter((j) => !j.read).length, [jobs])
 
@@ -28,8 +23,8 @@ export const HomePage = () => {
     <main className="max-w-5xl mx-auto px-4 py-6 flex flex-col gap-8">
       <section className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="rounded-3xl border-2 border-brand-green/20 bg-brand-surface p-6">
-          <p className="text-3xl font-bold text-brand-green">{newLastDay}</p>
-          <p className="text-sm text-gray-400">Vagas novas no último dia</p>
+          <p className="text-3xl font-bold text-brand-green">{newThisWeek}</p>
+          <p className="text-sm text-gray-400">Vagas publicadas nos últimos 7 dias</p>
         </div>
         <div className="rounded-3xl border-2 border-brand-green/20 bg-brand-surface p-6">
           <p className="text-3xl font-bold text-brand-green">{unreadCount}</p>

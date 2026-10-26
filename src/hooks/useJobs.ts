@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { computeRelevanceScore } from '../utils/scoring'
 import { DEFAULT_SCORING_CONFIG } from '../utils/keywords'
+import { listedAt } from '../utils/jobDates'
 import type { ScoringConfig } from '../types'
 import { useScoringConfig } from './useScoringConfig'
 import { useAuth } from '../contexts/AuthContext'
@@ -9,8 +10,18 @@ import type { Job, JobUserState } from '../types'
 
 export const JOBS_KEY = ['jobs'] as const
 
-/** How far back the feed reaches. Older jobs stay in the table but leave the feed. */
-export const FEED_WINDOW_DAYS = 30
+/**
+ * How far back the feed reaches, counted from a job's publication date (or its
+ * first-scrape day when the source gives none). Older jobs stay in the table
+ * but leave the feed.
+ */
+export const FEED_WINDOW_DAYS = 60
+
+/**
+ * A job the scraper hasn't seen listed for this long is treated as closed and
+ * leaves the feed (the scraper stamps `last_seen_at` on every run).
+ */
+export const FEED_CLOSED_AFTER_DAYS = 3
 
 /**
  * Rows requested per call. PostgREST caps every response at 1,000 rows by
@@ -24,9 +35,9 @@ const ID_CHUNK_SIZE = 100
 
 const MS_PER_DAY = 86_400_000
 
-// UTC calendar day, matching relativeDate's "hoje"/"ontem": a day's scrape is
-// ranked by relevance instead of by which source batch happened to finish last.
-const scrapeDay = (iso: string): number => Math.floor((Date.parse(iso) || 0) / MS_PER_DAY)
+// UTC calendar day, matching relativeDate's "hoje"/"ontem": jobs listed the
+// same day are ranked by relevance instead of by which source batch finished last.
+const listedDay = (job: Job): number => Math.floor((Date.parse(listedAt(job)) || 0) / MS_PER_DAY)
 
 export const enrichJobs = (rawJobs: Job[], config: ScoringConfig = DEFAULT_SCORING_CONFIG): Job[] =>
   rawJobs
@@ -41,9 +52,9 @@ export const enrichJobs = (rawJobs: Job[], config: ScoringConfig = DEFAULT_SCORI
     })
     .sort(
       (a, b) =>
-        scrapeDay(b.scraped_at) - scrapeDay(a.scraped_at) ||
+        listedDay(b) - listedDay(a) ||
         (b.relevance_score ?? 0) - (a.relevance_score ?? 0) ||
-        (Date.parse(b.scraped_at) || 0) - (Date.parse(a.scraped_at) || 0)
+        (Date.parse(listedAt(b)) || 0) - (Date.parse(listedAt(a)) || 0)
     )
 
 type PageResult<T> = PromiseLike<{ data: T[] | null; error: unknown }>
@@ -82,14 +93,17 @@ export const useJobs = () => {
     queryKey: JOBS_KEY,
     queryFn: async () => {
       const userId = user!.id
-      const sinceIso = new Date(Date.now() - FEED_WINDOW_DAYS * MS_PER_DAY).toISOString()
+      const now = Date.now()
+      const listedSince = new Date(now - FEED_WINDOW_DAYS * MS_PER_DAY).toISOString()
+      const seenSince = new Date(now - FEED_CLOSED_AFTER_DAYS * MS_PER_DAY).toISOString()
       const [recent, states] = await Promise.all([
         fetchAllPages<Job>((from, to) =>
           supabase
             .from('jobs')
             .select('*')
-            .gte('scraped_at', sinceIso)
-            .order('scraped_at', { ascending: false })
+            .gte('listed_at', listedSince)
+            .gte('last_seen_at', seenSince)
+            .order('listed_at', { ascending: false })
             .order('id')
             .range(from, to)
         ),
@@ -104,7 +118,7 @@ export const useJobs = () => {
       ])
 
       // Jobs the user applied to stay reachable after they age out of the
-      // window, so the "Candidatado" filter keeps the whole history.
+      // window or close, so the "Candidatado" filter keeps the whole history.
       const recentIds = new Set(recent.map((j) => j.id))
       const olderAppliedIds = states
         .filter((s) => s.status === 'applied' && !recentIds.has(s.job_id))

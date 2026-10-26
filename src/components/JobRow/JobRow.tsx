@@ -1,5 +1,6 @@
 import { ScoreBadge } from '../ScoreBadge/ScoreBadge'
 import { relativeDate } from '../../utils/relativeDate'
+import { listedAt } from '../../utils/jobDates'
 import type { Job } from '../../types'
 
 interface Props {
@@ -45,7 +46,7 @@ export const JobRow = ({ job, selected, onSelect }: Props) => (
     <div className="flex min-w-0 items-center gap-1 text-xs text-gray-500">
       <span className="min-w-0 truncate">{job.company}</span>
       {job.location && <span className="min-w-0 truncate">· {job.location}</span>}
-      <span className="ml-auto shrink-0">{relativeDate(job.scraped_at)}</span>
+      <span className="ml-auto shrink-0">{relativeDate(listedAt(job))}</span>
     </div>
     {job.matched_keywords && job.matched_keywords.length > 0 && (
       <ul className="flex flex-wrap gap-1" aria-label="Palavras-chave de match">

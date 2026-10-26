@@ -10,6 +10,10 @@ export interface Job {
   description: string | null
   posted_at: string | null
   scraped_at: string
+  /** Last scraper run that still saw this job listed; the feed hides stale ones. */
+  last_seen_at?: string
+  /** posted_at, else scraped_at (generated column): what the feed ranks by. */
+  listed_at?: string
   status: JobStatus
   read: boolean
   source_url: string | null
@@ -77,4 +81,5 @@ export interface FilterState {
   status: StatusFilter
   relevance: RelevanceFilter
   unreadOnly: boolean
+  newOnly: boolean
 }

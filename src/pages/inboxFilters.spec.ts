@@ -6,6 +6,7 @@ const base: FilterState = {
   status: 'all',
   relevance: 'all',
   unreadOnly: false,
+  newOnly: false,
 }
 
 const job = (over: Partial<Job>): Job => ({
@@ -40,5 +41,14 @@ describe('applyFilters (inbox)', () => {
   it('respects unreadOnly', () => {
     const jobs = [job({ id: 'a', read: false }), job({ id: 'b', read: true })]
     expect(applyFilters(jobs, { ...base, unreadOnly: true }).map((j) => j.id)).toEqual(['a'])
+  })
+
+  it('keeps only jobs published in the last week when newOnly is on', () => {
+    const now = Date.now()
+    const jobs = [
+      job({ id: 'fresh', posted_at: new Date(now - 2 * 86_400_000).toISOString() }),
+      job({ id: 'old', posted_at: new Date(now - 30 * 86_400_000).toISOString() }),
+    ]
+    expect(applyFilters(jobs, { ...base, newOnly: true }).map((j) => j.id)).toEqual(['fresh'])
   })
 })

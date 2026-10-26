@@ -17,6 +17,7 @@ export const UIProvider = ({ children }: { children: React.ReactNode }) => {
     status: 'all',
     relevance: 'all',
     unreadOnly: false,
+    newOnly: false,
   })
   const [sourceModalOpen, setSourceModalOpen] = useState(false)
   const [editingSource, setEditingSource] = useState<ScrapingSource | null>(null)

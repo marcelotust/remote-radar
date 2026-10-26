@@ -94,6 +94,7 @@ export const MOCK_SCORING_SETTINGS: ScoringSettings[] = [
 // Relative to the test run so the seeded jobs fall inside useJobs' feed window
 // (FEED_WINDOW_DAYS). All three share it, so the feed ranks them by relevance.
 const RECENTLY_SCRAPED = new Date(Date.now() - 2 * 3_600_000).toISOString()
+const RECENTLY_POSTED = new Date(Date.now() - 24 * 3_600_000).toISOString()
 
 export const MOCK_JOBS: Job[] = [
   {
@@ -103,7 +104,7 @@ export const MOCK_JOBS: Job[] = [
     url: 'https://stripe.com/jobs/1',
     location: 'Remote',
     description: 'We are looking for a React TypeScript engineer with Next.js experience.',
-    posted_at: '2026-06-19T00:00:00Z',
+    posted_at: RECENTLY_POSTED,
     scraped_at: RECENTLY_SCRAPED,
     status: 'none',
     read: false,
@@ -116,7 +117,7 @@ export const MOCK_JOBS: Job[] = [
     url: 'https://cloudflare.com/jobs/2',
     location: 'Remote',
     description: 'PHP and Java backend with some frontend work.',
-    posted_at: '2026-06-18T00:00:00Z',
+    posted_at: RECENTLY_POSTED,
     scraped_at: RECENTLY_SCRAPED,
     status: 'none',
     read: false,
@@ -129,7 +130,7 @@ export const MOCK_JOBS: Job[] = [
     url: 'https://techstartup.com/jobs/3',
     location: 'Presencial São Paulo',
     description: 'React frontend developer. Must work presencial.',
-    posted_at: '2026-06-17T00:00:00Z',
+    posted_at: RECENTLY_POSTED,
     scraped_at: RECENTLY_SCRAPED,
     status: 'none',
     read: true,

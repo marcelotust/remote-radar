@@ -29,7 +29,7 @@ beforeEach(() => {
 describe('HomePage', () => {
   it('shows the summary labels and highlights with a link to the inbox', async () => {
     render(<HomePage />, { wrapper: makeWrapper() })
-    expect(screen.getByText(/vagas novas no último dia/i)).toBeInTheDocument()
+    expect(screen.getByText(/vagas publicadas nos últimos 7 dias/i)).toBeInTheDocument()
     expect(screen.getByText(/vagas não lidas/i)).toBeInTheDocument()
 
     await waitFor(() => {
@@ -70,7 +70,7 @@ describe('HomePage', () => {
     ).not.toBeInTheDocument()
   })
 
-  it('counts a job scraped within the last 24h', async () => {
+  it('counts a job published within the last 7 days', async () => {
     await supabase.from('jobs').insert({
       title: 'Fresh Role',
       company: 'Fresh Co',
@@ -85,7 +85,9 @@ describe('HomePage', () => {
     })
     render(<HomePage />, { wrapper: makeWrapper() })
     await waitFor(() => {
-      const card = screen.getByText(/vagas novas no último dia/i).closest('div') as HTMLElement
+      const card = screen
+        .getByText(/vagas publicadas nos últimos 7 dias/i)
+        .closest('div') as HTMLElement
       expect(Number(card.querySelector('p')?.textContent)).toBeGreaterThanOrEqual(1)
     })
   })

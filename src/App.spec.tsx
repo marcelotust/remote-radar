@@ -11,7 +11,7 @@ describe('App', () => {
     signIn()
     render(<App />)
     await waitFor(() => expect(screen.getByText(/Remote Radar/i)).toBeInTheDocument())
-    expect(screen.getByText(/vagas novas no último dia/i)).toBeInTheDocument()
+    expect(screen.getByText(/vagas publicadas nos últimos 7 dias/i)).toBeInTheDocument()
   })
 
   it('redirects unauthenticated visitors to /login', async () => {
@@ -25,6 +25,8 @@ describe('App', () => {
     signIn()
     window.history.pushState({}, '', '/some-unknown-route')
     render(<App />)
-    await waitFor(() => expect(screen.getByText(/vagas novas no último dia/i)).toBeInTheDocument())
+    await waitFor(() =>
+      expect(screen.getByText(/vagas publicadas nos últimos 7 dias/i)).toBeInTheDocument()
+    )
   })
 })
