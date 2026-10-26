@@ -8,10 +8,44 @@ of:
   or heavy anti-bot + ToS restrictions). Set to `is_active = false` so it stops
   consuming run time. Flipped by `supabase/migrations/0003_disable_unviable_sources.sql`.
 - **adapter planned** — a scrapeable public board with no dedicated adapter yet.
-  Left `is_active = true`; build an adapter, then it resolves instead of timing out.
+  Since `supabase/migrations/0018_reset_jobs_and_prune_sources.sql` these are
+  inactive too (see below); build an adapter, then flip `is_active` back on.
 
-Out of scope here: the remote boards still on the generic adapter (Jobspresso,
-JustRemote, JS Remotely, AI Jobs, Remote Woman, Remote Circle — tracked under #23).
+## Ingest scope: software-development roles only
+
+Since migration 0018 the pipeline drops every posting whose title doesn't name a
+software-development role (`scraper/roleFilter.ts`), whatever the source. That
+filter is shared by everyone, so it stays broad within development (frontend,
+backend, mobile, data/ML engineering, DevOps/SRE, QA engineers); per-person
+targeting happens downstream.
+
+## Plain HTTP over headless rendering
+
+We Work Remotely and Remote OK block headless Chromium (#91), but both answer
+plain HTTP: WWR through per-category RSS feeds (`WWR_FEEDS` in
+`scraper/adapters/weworkremotely.ts`), Remote OK through its JSON API. When a
+board times out under Playwright, check for an RSS feed or public API before
+writing it off.
+
+## Deactivated in 0018 (never yielded a job)
+
+Non-ATS boards that had not produced a single job across months of daily runs:
+the generic JSON-LD adapter finds nothing on them, or they block headless
+Chromium. ATS boards with no current remote openings stay active, since each
+costs one API call.
+
+| Source          | URL                            |
+| --------------- | ------------------------------ |
+| AI Jobs         | https://theaijobboard.com      |
+| Built In        | https://builtin.com            |
+| JobNaGringa     | https://www.jobnagringa.com.br |
+| Jobspresso      | https://jobspresso.co          |
+| JS Remotely     | https://jsremotely.com         |
+| JustRemote      | https://justremote.co          |
+| Remotar         | https://remotar.com.br         |
+| Remote Circle   | https://remotecircle.com       |
+| Remote Woman    | https://remotewoman.com        |
+| Work In Estonia | https://workinestonia.com/job  |
 
 ## Disabled (unviable)
 
@@ -62,10 +96,10 @@ JustRemote, JS Remotely, AI Jobs, Remote Woman, Remote Circle — tracked under 
 | Dice         | https://www.dice.com         | Anti-bot protection                          |
 | Jobot        | https://www.jobot.com        | Recruiting agency, anti-bot                  |
 
-## Adapter planned (kept active)
+## Adapter planned (inactive since 0018)
 
 Scrapeable public boards with no dedicated adapter yet. Build an adapter, then
-they resolve instead of timing out.
+reactivate them.
 
 | Source          | URL                            | Note                                           |
 | --------------- | ------------------------------ | ---------------------------------------------- |
