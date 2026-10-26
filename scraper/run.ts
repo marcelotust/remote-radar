@@ -5,7 +5,7 @@ import { resolveAdapter } from './adapters/index.ts'
 import { scoreJob } from './score.ts'
 import { createScraperClient, fetchActiveSources, upsertJobs, recordSourceRun } from './db.ts'
 import { runScrape } from './pipeline.ts'
-import { buildRunSummaryMarkdown } from './runSummary.ts'
+import { buildRunSummaryMarkdown, runHealthProblem } from './runSummary.ts'
 
 const numericEnv = (name: string, fallback: number): number => {
   const parsed = Number(process.env[name])
@@ -37,6 +37,12 @@ const main = async (): Promise<void> => {
     const summaryFile = process.env.GITHUB_STEP_SUMMARY
     if (summaryFile) {
       appendFileSync(summaryFile, buildRunSummaryMarkdown(summary))
+    }
+
+    const problem = runHealthProblem(summary)
+    if (problem) {
+      console.error(`[scrape] unhealthy run: ${problem}`)
+      process.exitCode = 1
     }
   } finally {
     await browser.close()

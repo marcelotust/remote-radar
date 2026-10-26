@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { buildRunSummaryMarkdown } from './runSummary.ts'
+import { buildRunSummaryMarkdown, runHealthProblem } from './runSummary.ts'
 import type { ScrapeSummary } from './pipeline.ts'
 
 const summary: ScrapeSummary = {
@@ -25,5 +25,27 @@ describe('buildRunSummaryMarkdown', () => {
     const md = buildRunSummaryMarkdown(summary)
     expect(md).toContain('| https://weworkremotely.com | success | 4 |')
     expect(md).toContain('| https://arc.dev | error | 0 |')
+  })
+})
+
+describe('runHealthProblem', () => {
+  it('accepts a run that extracted jobs with a minority of failed sources', () => {
+    expect(runHealthProblem(summary)).toBeNull()
+  })
+
+  it('flags a run that extracted nothing', () => {
+    expect(runHealthProblem({ ...summary, extracted: 0, inserted: 0 })).toBe(
+      'no jobs extracted from any source'
+    )
+  })
+
+  it('flags a run where most sources failed', () => {
+    expect(runHealthProblem({ ...summary, sources: 5, failedSources: 3 })).toBe(
+      '3 of 5 sources failed'
+    )
+  })
+
+  it('flags a run with no active sources', () => {
+    expect(runHealthProblem({ ...summary, sources: 0, perSource: [] })).toBe('no active sources')
   })
 })
