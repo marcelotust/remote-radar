@@ -62,6 +62,7 @@ export const runScrape = async (deps: PipelineDeps): Promise<ScrapeSummary> => {
             location: raw.location,
             description: raw.description,
             source_url: source.url,
+            posted_at: raw.published_at,
             relevance_score,
             relevance_level,
           }
