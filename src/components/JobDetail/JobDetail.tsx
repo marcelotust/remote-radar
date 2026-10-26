@@ -30,7 +30,11 @@ export const JobDetail = ({ job }: Props) => {
           {job.company}
           {job.location && <span className="text-gray-600"> · {job.location}</span>}
         </p>
-        <p className="mt-1 text-xs text-gray-600">adicionado {relativeDate(job.scraped_at)}</p>
+        <p className="mt-1 text-xs text-gray-600">
+          {job.posted_at
+            ? `publicada ${relativeDate(job.posted_at)} · vista pela primeira vez ${relativeDate(job.scraped_at)}`
+            : `adicionada ${relativeDate(job.scraped_at)}`}
+        </p>
       </div>
 
       <div className="flex flex-wrap items-center gap-2">

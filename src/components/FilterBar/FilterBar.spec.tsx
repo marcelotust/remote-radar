@@ -34,6 +34,14 @@ describe('FilterBar', () => {
     expect(checkbox).toBeChecked()
   })
 
+  it('renders the new-jobs toggle and updates context when it changes', async () => {
+    renderFilterBar()
+    const checkbox = screen.getByLabelText(/novas \(7 dias\)/i)
+    expect(checkbox).not.toBeChecked()
+    await userEvent.click(checkbox)
+    expect(checkbox).toBeChecked()
+  })
+
   it('updates context when status filter changes', async () => {
     renderFilterBar()
     await userEvent.click(screen.getByLabelText(/status/i))

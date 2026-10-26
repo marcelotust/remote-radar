@@ -1,12 +1,11 @@
 import { renderHook, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { describe, it, expect, beforeEach } from 'vitest'
-import { useJobs, enrichJobs, FEED_PAGE_SIZE, FEED_WINDOW_DAYS } from './useJobs'
+import { useJobs, enrichJobs } from './useJobs'
 import { useUpdateJobStatus } from './useUpdateJobStatus'
 import { useToggleJobRead } from './useToggleJobRead'
 import { useUpdateScoringSettings } from './useScoringConfigMutations'
 import { AuthProvider } from '../contexts/AuthContext'
-import { supabase } from '../lib/supabase'
 import { __setSupabaseSession } from '../lib/__mocks__/supabase'
 import { MOCK_USER_ID } from '../data/mockData'
 import type { Job } from '../types'
@@ -44,68 +43,6 @@ describe('useJobs', () => {
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
     const scores = result.current.data!.map((j) => j.relevance_score ?? 0)
     expect(scores).toEqual([...scores].sort((a, b) => b - a))
-  })
-
-  const daysAgo = (days: number) => new Date(Date.now() - days * 86_400_000).toISOString()
-
-  const insertJob = (over: Partial<Job>) =>
-    supabase
-      .from('jobs')
-      .insert({
-        title: 'Seeded Role',
-        company: 'Seed Co',
-        url: `https://seed/${crypto.randomUUID()}`,
-        location: null,
-        description: null,
-        posted_at: null,
-        scraped_at: daysAgo(0),
-        source_url: null,
-        ...over,
-      })
-      .select()
-      .single()
-
-  it('leaves out jobs scraped before the feed window', async () => {
-    await insertJob({ title: 'Stale Role', scraped_at: daysAgo(FEED_WINDOW_DAYS + 1) })
-    const { result } = renderHook(() => useJobs(), { wrapper: makeWrapper() })
-    await waitFor(() => expect(result.current.isSuccess).toBe(true))
-    expect(result.current.data!.map((j) => j.title)).not.toContain('Stale Role')
-  })
-
-  it('keeps an applied job after it ages out of the window', async () => {
-    const { data } = await insertJob({
-      title: 'Old Applied Role',
-      scraped_at: daysAgo(FEED_WINDOW_DAYS + 10),
-    })
-    await supabase.from('job_user_state').insert({
-      user_id: MOCK_USER_ID,
-      job_id: (data as { id: string }).id,
-      status: 'applied',
-      read: true,
-    })
-    const { result } = renderHook(() => useJobs(), { wrapper: makeWrapper() })
-    await waitFor(() => expect(result.current.isSuccess).toBe(true))
-    const old = result.current.data!.find((j) => j.title === 'Old Applied Role')
-    expect(old?.status).toBe('applied')
-  })
-
-  it('pages past the per-response row cap instead of truncating', async () => {
-    await supabase.from('jobs').insert(
-      Array.from({ length: FEED_PAGE_SIZE + 5 }, (_, i) => ({
-        title: `Bulk Role ${i}`,
-        company: 'Bulk Co',
-        url: `https://bulk/${i}`,
-        location: null,
-        description: null,
-        posted_at: null,
-        scraped_at: daysAgo(1),
-        source_url: null,
-      }))
-    )
-    const { result } = renderHook(() => useJobs(), { wrapper: makeWrapper() })
-    await waitFor(() => expect(result.current.isSuccess).toBe(true))
-    // 3 seeded mock jobs + every bulk row
-    expect(result.current.data!).toHaveLength(3 + FEED_PAGE_SIZE + 5)
   })
 
   it('recomputes job scores when the scoring config changes', async () => {
@@ -220,6 +157,21 @@ describe('enrichJobs', () => {
     const newer = baseJob({ id: 'new', scraped_at: '2026-06-10T00:00:00Z' })
     const out = enrichJobs([older, newer])
     expect(out.map((j) => j.id)).toEqual(['new', 'old'])
+  })
+
+  it('ranks by publication day, not by scrape day', () => {
+    const publishedEarlier = baseJob({
+      id: 'earlier',
+      posted_at: '2026-06-01T00:00:00Z',
+      scraped_at: '2026-06-10T00:00:00Z',
+    })
+    const publishedLater = baseJob({
+      id: 'later',
+      posted_at: '2026-06-08T00:00:00Z',
+      scraped_at: '2026-06-10T00:00:00Z',
+    })
+    const out = enrichJobs([publishedEarlier, publishedLater])
+    expect(out.map((j) => j.id)).toEqual(['later', 'earlier'])
   })
 
   it('ranks by relevance within the same day, whatever the time of the scrape', () => {

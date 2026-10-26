@@ -12,6 +12,8 @@ export interface JobRow {
   location: string | null
   description: string | null
   source_url: string
+  /** The source's own publication date (ISO), or null when it exposes none. */
+  posted_at: string | null
   relevance_score: number
   relevance_level: string
 }
@@ -45,14 +47,43 @@ export const fetchActiveSources = async (client: DbClient): Promise<SourceRow[]>
   return (data ?? []) as SourceRow[]
 }
 
+// Keeps each `url=in.(...)` query string well under proxy length limits.
+const URL_CHUNK_SIZE = 40
+
+const existingUrls = async (client: DbClient, urls: string[]): Promise<Set<string>> => {
+  const found = new Set<string>()
+  for (let i = 0; i < urls.length; i += URL_CHUNK_SIZE) {
+    const { data, error } = await client
+      .from('jobs')
+      .select('url')
+      .in('url', urls.slice(i, i + URL_CHUNK_SIZE))
+    if (error) throw error
+    for (const row of (data ?? []) as { url: string }[]) found.add(row.url)
+  }
+  return found
+}
+
+/**
+ * Inserts new jobs and refreshes the ones the source still lists: every row is
+ * stamped `last_seen_at` (how the feed tells a closed job from an open one),
+ * and an existing row also takes the latest posted_at and content. Returns how
+ * many jobs were new, not how many were touched.
+ */
 export const upsertJobs = async (client: DbClient, jobs: JobRow[]): Promise<{ count: number }> => {
-  if (jobs.length === 0) return { count: 0 }
-  const { data, error } = await client
-    .from('jobs')
-    .upsert(jobs, { onConflict: 'url', ignoreDuplicates: true })
-    .select('url')
+  // One row per url: Postgres rejects an upsert that hits the same row twice.
+  const unique = [...new Map(jobs.map((j) => [j.url, j])).values()]
+  if (unique.length === 0) return { count: 0 }
+  const known = await existingUrls(
+    client,
+    unique.map((j) => j.url)
+  )
+  const seenAt = new Date().toISOString()
+  const { error } = await client.from('jobs').upsert(
+    unique.map((j) => ({ ...j, last_seen_at: seenAt })),
+    { onConflict: 'url' }
+  )
   if (error) throw error
-  return { count: data?.length ?? 0 }
+  return { count: unique.filter((j) => !known.has(j.url)).length }
 }
 
 export const recordSourceRun = async (client: DbClient, result: SourceRunResult): Promise<void> => {

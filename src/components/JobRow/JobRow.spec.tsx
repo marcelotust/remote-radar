@@ -27,6 +27,17 @@ describe('JobRow', () => {
     expect(screen.getByText('Stripe')).toBeInTheDocument()
   })
 
+  it('dates the row by publication, not by when it was scraped', () => {
+    const now = Date.now()
+    const job = {
+      ...baseJob,
+      posted_at: new Date(now - 3 * 86_400_000).toISOString(),
+      scraped_at: new Date(now).toISOString(),
+    }
+    render(<JobRow job={job} selected={false} onSelect={() => {}} />)
+    expect(screen.getByText('há 3 dias')).toBeInTheDocument()
+  })
+
   it('calls onSelect with the job when clicked', async () => {
     const onSelect = vi.fn()
     render(<JobRow job={baseJob} selected={false} onSelect={onSelect} />)

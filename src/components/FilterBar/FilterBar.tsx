@@ -52,6 +52,13 @@ export const FilterBar = () => {
           checked={filters.unreadOnly}
           onChange={(checked) => setFilters({ unreadOnly: checked })}
         />
+
+        <Toggle
+          id="new-filter"
+          label="Novas (7 dias)"
+          checked={filters.newOnly}
+          onChange={(checked) => setFilters({ newOnly: checked })}
+        />
       </div>
     </div>
   )
