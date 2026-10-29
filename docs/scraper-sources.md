@@ -150,3 +150,19 @@ property. Since #108, it runs each posting through
 Deliberately only title + location are scanned, not the full description —
 a long description can mention "remote" or "hybrid" incidentally (e.g. "you
 will support our remote teams") without describing the role itself.
+
+## Careers-page list (migration 0020)
+
+Company careers pages resolved to their ATS. The 15 with a working
+Ashby/Greenhouse/Lever/Workable API are seeded by `0020_seed_careers_page_sources.sql`;
+fal.ai (Ashby slug `fal-ai`), SafetyWing (Pinpoint) and Expo (Rippling) follow in
+`0021` once the Pinpoint and Rippling adapters existed.
+`job-boards.greenhouse.io` URLs are stored as `boards.greenhouse.io`, the host
+the Greenhouse adapter matches. Not seeded:
+
+| Company                                                                                                      | Why                                                |
+| ------------------------------------------------------------------------------------------------------------ | -------------------------------------------------- |
+| Lemon.io (BambooHR)                                                                                          | No adapter, and the board has 0 openings           |
+| Toggl, Go Augment (Ashby embed)                                                                              | Ashby posting API returns 404 for the guessed slug |
+| Buffer, Parity (Ashby slug exists, 0 jobs), Builder.io (Greenhouse, 0 jobs)                                  | Board empty and ownership unconfirmed              |
+| Synd, Adapty, Workbrew, Offchain site, Dub, Pulumi, Somapix, Perry Street, Veta Virtual, OpenBorder, Pear VC | ATS not found in page HTML (JS-rendered or custom) |
