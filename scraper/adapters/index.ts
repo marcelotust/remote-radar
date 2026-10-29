@@ -9,6 +9,7 @@ import { github } from './github.ts'
 import { lever } from './lever.ts'
 import { greenhouse } from './greenhouse.ts'
 import { ashby } from './ashby.ts'
+import { workable } from './workable.ts'
 
 const adapters: Adapter[] = [
   weworkremotely,
@@ -20,6 +21,7 @@ const adapters: Adapter[] = [
   lever,
   greenhouse,
   ashby,
+  workable,
 ]
 
 export const resolveAdapter = (sourceUrl: string): Adapter => {
