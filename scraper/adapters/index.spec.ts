@@ -3,6 +3,8 @@ import { resolveAdapter } from './index.ts'
 import { github } from './github.ts'
 import { lever } from './lever.ts'
 import { workable } from './workable.ts'
+import { pinpoint } from './pinpoint.ts'
+import { rippling } from './rippling.ts'
 import { greenhouse } from './greenhouse.ts'
 
 describe('resolveAdapter', () => {
@@ -36,5 +38,7 @@ describe('resolveAdapter', () => {
     expect(resolveAdapter('https://jobs.lever.co/acme')).toBe(lever)
     expect(resolveAdapter('https://boards.greenhouse.io/acme')).toBe(greenhouse)
     expect(resolveAdapter('https://apply.workable.com/acme')).toBe(workable)
+    expect(resolveAdapter('https://acme.pinpointhq.com')).toBe(pinpoint)
+    expect(resolveAdapter('https://ats.rippling.com/acme/jobs')).toBe(rippling)
   })
 })
